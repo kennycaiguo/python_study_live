@@ -1,0 +1,10 @@
+ name: zhangsan
+ age: 37
+ lower student:
+     name: lisi
+     age: 25
+ higher student:
+  -  name: wangwu
+     age: 35
+  -  name1: zhaoliu
+     age1: 42

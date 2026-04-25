@@ -1,6 +1,7 @@
 """
 define classes of the Role in the game
 """
+import random
 from typing import List
 import pygame as pg
 from game_constants import GameConstants as gc
@@ -35,3 +36,57 @@ class Player(pg.sprite.Sprite):
     def gunpos(self):
         pos = self.facing * self.gun_offset + self.rect.centerx
         return pos, self.rect.top
+
+class Alien(pg.sprite.Sprite):
+    speed = 13
+    animcycle = 12
+    images: List[pg.Surface] = []
+
+    def __init__(self,*groups):
+        pg.sprite.Sprite.__init__(self,*groups)
+        self.image = self.images[0]
+        self.rect = self.image.get_rect()
+        self.facing = random.choice((-1,1)) * Alien.speed
+        self.frame = 0
+        if self.facing < 0:
+            self.rect.right = gc.SREENRECT.right
+
+    def update(self, *args, **kwargs):
+       self.rect.move_ip(self.facing,0)        
+       if not gc.SREENRECT.contains(self.rect):
+           self.facing = -self.facing 
+           self.rect.top = self.rect.bottom + 1
+           self.rect = self.rect.clamp(gc.SREENRECT)
+       self.frame = self.frame + 1   
+       self.image = self.images[self.frame // self.animcycle % 3] #divide by zero?
+
+class Explosion(pg.sprite.Sprite):
+    defaultlife =12
+    animcycle = 3
+    images:List[pg.Surface] = []  
+
+    def __init__(self,actor, *groups):
+        pg.sprite.Sprite.__init__(self,*groups)    
+        self.image = self.images[0]
+        self.rect = self.image.get_rect(center=actor.rect.center)
+        self.life = self.defaultlife  
+    
+    def update(self, *args, **kwargs):
+        self.life = self.life -1 
+        self.image = self.images[self.life // self.animcycle % 3]
+        if self.life <= 0:
+            self.kill()
+
+class Shot(pg.sprite.Sprite):
+    speed = -1
+    images: List[pg.Surface] = []
+
+    def __init__(self,pos, *groups):
+         pg.sprite.Sprite.__init__(self,*groups)
+         self.image = self.images[0]
+         self.rect = self.image.get_rect(midbottom = pos)
+
+    def update(self, *args, **kwargs):
+        self.rect.move_ip(0,self.speed)     
+        if self.rect.top < 0:
+            self.kill()
