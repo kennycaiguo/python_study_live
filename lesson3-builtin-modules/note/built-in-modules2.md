@@ -1223,9 +1223,17 @@ print(calculate.__name__)  # 输出"calculate"而非"wrapper"
 
 # 23. threading
 
+### 参考网址1： https://zhuanlan.zhihu.com/p/824873590
 
+### 参考网址2：https://www.cnblogs.com/zoubilin/p/18215670
+
+### 参考网址3： https://www.runoob.com/python3/python-treading.html
+
+### 参考网址4： https://medium.com/@me.mdhamim/a-comprehensive-guide-to-python-threading-advanced-concepts-and-best-practices-9f3aea6f0a63
 
 # 24. multiprocessing
+
+
 
 
 

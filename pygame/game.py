@@ -61,3 +61,15 @@ for x in range(0,gc.SCREENRECT.width,bgdtile.get_width()):
        background.blit(bgdtile,(x,0))
 screen.blit(background,(0,0))   
 pg.display.flip()    
+
+# load the sound effects
+boom_sound = load_sound(main_dir,"boom.wav")
+shot_sound = load_sound(main_dir,"car_door.wav")
+# play the backgroud music
+if pg.mixer:
+       music_path = os.path.join(main_dir,"data","house_lo.wav")
+       pg.mixer.music.load(music_path)
+       pg.mixer.music.play(-1)
+
+# Initialize Game Groups
+
