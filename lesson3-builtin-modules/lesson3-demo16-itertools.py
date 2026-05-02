@@ -20,4 +20,73 @@ itertools.zip_longest(*iterables,fillvalue=None) # aggregate elements from multi
 """
 import itertools as itt
 
+# count()
+# iter = itt.count(start=0,step=1)
+# for i in iter:
+#     if i>30 :
+#         break
+#     print(f"{i}")
+
+# 2. cycle("abc")   # 无限重复a,b,c
+# sum = 0
+# for i in itt.cycle("hello"):
+#     if sum > 10:
+#         break
+#     print(i,end= ",") # h,e,l,l,o,h,e,l,l,o,h,
+#     sum += 1
+
+# 3.repeat(obj,times)
+""" 
+obj : 循环的对象
+times : 循环的次数
+"""
+# for x in itt.repeat("I love u",5):
+#     print(x)
+
+# 1. chain(p,q) : 将多个可迭代对象分别处理，可将多个序列处理为单个序列
+ 
+"""
+ p , q 都是可迭代对象
+"""
+# for i in itt.chain("Hello"," world of python"):
+#     print(i,end=" ")
+
+# # 2. chain.from_iterable(iterable)   # 这里相当于将一个迭代器的元素都拿来进行返回
+# for i in itt.chain.from_iterable(["hello","python"]):
+#     print(i,end=" ")  # h e l l o p y t h o n 
+# print()
+
+ # 1.compress(data,selector)
+"""
+data:一个可以用来迭代的数据。
+selector:选择器,用来对data进行筛选。
+生成一个筛选之后的迭代器,筛选规则为,当selector的第i个值为真,则保留data的第i个值,否则去除data的第i个值
+
+"""
+# for x in itt.compress('ABCDEF', [1, 0, 1, 0, 1, 1]): # A-1(KEEP) B-0(DISCARD) C-1(KEEP)  D-0(DISCARD) E-1(KEEP) F-1(KEEP)
+#     print(x,end=" ") # A C E F 
+# print()
+
+# 2.dropwhile(predicate, iterable)
+"""
+predicate:一个判断函数,该函数返回值类型为bool。
+iterable:可迭代对象。
+注意:符合predicate条件的元素需要去除。
+"""
+#去除小于3的数
+# for i in itt.dropwhile(lambda x:x<3,[1,2,3,4,5]):
+#     print(i,end=" ")
+# print()
+# #输出 ： 3 4 5
+
+# 3. takewhile(predicate, iterable)
+"""
+创建一个迭代器，只要 predicate 为真就从可迭代对象中返回元素。注意:可迭代对象里面不能有负数
+"""
+for i in itt.takewhile(lambda x: x > 5, [7, 6, 32, 3, 6, 5]):
+    print(i,end=" ")
+print()    # 7 6 32
+# for i in itt.takewhile(lambda x: x > 1, [32, 6, 5,0]):
+#     print(i,end=" ")
+# print()   
 

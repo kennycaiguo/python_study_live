@@ -90,3 +90,36 @@ class Shot(pg.sprite.Sprite):
         self.rect.move_ip(0,self.speed)     
         if self.rect.top < 0:
             self.kill()
+
+class Bomb(pg.sprite.Sprite):
+    speed = 9
+    images: List[pg.Surface] = []
+
+    def __init__(self, alien, explosion_group,*groups):
+        pg.sprite.Sprite.__init__(self,*groups)
+        self.image = self.images[0]
+        self.rect = self.image.get_rect(midbottom=alien.rect.move(0, 5).midbottom)
+        self.explosion_group = explosion_group
+
+    def update(self, *args, **kwargs):
+        self.rect.move_ip(0,self.speed)
+        if self.rect.bottom > 470:
+            Explosion(self,self.explosion_group)
+            self.kill()
+
+class Score(pg.sprite.Sprite):
+
+    def __init__(self, *groups):
+       pg.sprite.Sprite.__init__(self,*groups)
+       self.font = pg.font.Font(None, 20)   
+       self.font.set_italic(1)
+       self.color = 'white'
+       self.lastscore = -1
+       self.update()
+       self.rect = self.image.get_rect().move(10,450)       
+
+    def update(self, *args, **kwargs):
+        if gc.SCORE !=self.lastscore:
+            self.lastscore = gc.SCORE 
+            msg = f"Score: {gc.SCORE}"
+            self.image = self.font.render(msg,0,self.color)
