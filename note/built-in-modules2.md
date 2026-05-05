@@ -1839,9 +1839,273 @@ The [PubNub docs](https://www.pubnub.com/docs) will get you up and running, rega
 
 # 26. sqlite3
 
+### 参考网址1：https://www.cnblogs.com/nxhujiee/p/18976947
+
+SQLite 是 Python 内置的轻量级数据库，无需单独的服务器进程，使用文件存储数据。它适合小型应用、原型开发或嵌入式系统，支持标准 SQL 语法。下面详细介绍 `sqlite3` 模块的用法和示例。
+
+### **1. 连接数据库**
+
+使用 `sqlite3.connect()` 创建数据库连接。如果数据库不存在，会自动创建。
+
+```python
+import sqlite3
+
+# 连接到数据库（如果不存在则创建）
+conn = sqlite3.connect('example.db')  # 或使用内存数据库: sqlite3.connect(':memory:')
+
+# 创建游标对象执行 SQL 命令
+cursor = conn.cursor()
+```
+
+### **2. 创建表**
+
+使用 `CREATE TABLE` 语句创建表，需调用 `conn.commit()` 提交事务。
+
+```python
+# 创建 users 表
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    age INTEGER,
+    email TEXT UNIQUE
+)
+''')
+conn.commit()  # 提交事务
+```
+
+### **3. 插入数据**
+
+使用 `INSERT INTO` 插入单条或多条记录。
+
+```python
+# 插入单条记录
+cursor.execute("INSERT INTO users (name, age, email) VALUES (?, ?, ?)", 
+               ("Alice", 30, "alice@example.com"))
+
+# 插入多条记录（使用 executemany）
+users_data = [
+    ("Bob", 25, "bob@example.com"),
+    ("Charlie", 35, "charlie@example.com")
+]
+cursor.executemany("INSERT INTO users (name, age, email) VALUES (?, ?, ?)", users_data)
+
+conn.commit()  # 提交事务
+```
+
+### **4. 查询数据**
+
+使用 `SELECT` 语句查询数据，通过 `fetchone()`、`fetchall()` 或 `fetchmany()` 获取结果。
+
+```python
+# 查询所有记录
+cursor.execute("SELECT * FROM users")
+all_users = cursor.fetchall()
+print("所有用户:", all_users)
+
+# 查询单条记录
+cursor.execute("SELECT * FROM users WHERE name = ?", ("Alice",))
+user = cursor.fetchone()
+print("Alice:", user)
+
+# 使用 fetchmany 获取部分结果
+cursor.execute("SELECT * FROM users")
+some_users = cursor.fetchmany(2)
+print("前两条记录:", some_users)
+```
+
+### **5. 更新和删除数据**
+
+使用 `UPDATE` 和 `DELETE` 语句修改数据，需提交事务。
+
+```python
+# 更新记录
+cursor.execute("UPDATE users SET age = ? WHERE name = ?", (31, "Alice"))
+
+# 删除记录
+cursor.execute("DELETE FROM users WHERE age < ?", (30,))
+
+conn.commit()  # 提交事务
+```
+
+### **6. 参数化查询**
+
+使用参数化查询（`?` 占位符）防止 SQL 注入。
+
+```python
+# 安全示例：使用参数化查询
+name = "Charlie"
+cursor.execute("SELECT * FROM users WHERE name = ?", (name,))
+
+# 不安全示例（避免这样写）
+# cursor.execute(f"SELECT * FROM users WHERE name = '{name}'")
+```
+
+### **7. 事务处理**
+
+SQLite 默认使用自动提交模式，可通过 `conn.commit()` 和 `conn.rollback()` 管理事务。
+
+```python
+try:
+    # 开始事务
+    cursor.execute("INSERT INTO users (name, email) VALUES (?, ?)", ("David", "david@example.com"))
+    # 模拟错误
+    # 1 / 0  # 取消注释此行触发异常
+    conn.commit()  # 提交事务
+except Exception as e:
+    print(f"Error: {e}")
+    conn.rollback()  # 回滚事务
+```
+
+### **8. 高级特性**
+
+#### **8.1 自定义函数**
+
+```python
+def multiply(a, b):
+    return a * b
+
+conn.create_function("multiply", 2, multiply)
+cursor.execute("SELECT multiply(3, 4)")
+print(cursor.fetchone())  # 输出: (12,)
+```
+
+#### **8.2 行对象（Row Objects）**
+
+```python
+conn.row_factory = sqlite3.Row
+cursor.execute("SELECT * FROM users")
+row = cursor.fetchone()
+print(row["name"], row["age"])  # 通过列名访问数据
+```
+
+### **9. 关闭连接**
+
+操作完成后关闭游标和连接。
+
+```python
+cursor.close()
+conn.close()
+```
+
+### **完整示例：用户管理系统**
+
+下面是一个完整的用户管理系统示例，包含增删改查功能：
+
+```python
+import sqlite3
+
+def create_connection():
+    conn = sqlite3.connect('users.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def create_table():
+    conn = create_connection()
+    with conn:
+        conn.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE,
+            age INTEGER
+        )
+        ''')
+
+def add_user(name, email, age):
+    conn = create_connection()
+    with conn:
+        try:
+            conn.execute("INSERT INTO users (name, email, age) VALUES (?, ?, ?)", 
+                        (name, email, age))
+            return True
+        except sqlite3.IntegrityError:
+            print(f"Error: Email {email} already exists.")
+            return False
+
+def get_all_users():
+    conn = create_connection()
+    with conn:
+        return conn.execute("SELECT * FROM users").fetchall()
+
+def update_user_age(user_id, new_age):
+    conn = create_connection()
+    with conn:
+        conn.execute("UPDATE users SET age = ? WHERE id = ?", (new_age, user_id))
+
+def delete_user(user_id):
+    conn = create_connection()
+    with conn:
+        conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+
+# 使用示例
+if __name__ == "__main__":
+    create_table()
+    add_user("Eve", "eve@example.com", 28)
+    users = get_all_users()
+    for user in users:
+        print(dict(user))  # 打印为字典格式
+```
+
+### **注意事项**
+
+1. **线程安全**：SQLite 支持多线程读，但写入时需加锁（默认模式）。
+2. **事务管理**：批量操作时使用事务可显著提高性能。
+3. **大数据处理**：SQLite 适合中小型数据集，大数据量建议使用 PostgreSQL 或 MySQL。
+
+通过上述示例，你可以掌握 `sqlite3` 模块的基本用法。如需更复杂的功能，可以结合 Python 的其他库（如 Pandas）进行数据处理。
+
+### 参考网址2：https://developer.aliyun.com/article/1481409
+
 
 
 # 27. csv
+
+### 参考网址1：https://developer.aliyun.com/article/524890
+
+### 参考网址2：https://www.cnblogs.com/klb561/p/19342026
+
+#### 操作示例
+
+```
+"""
+python csv built-in module
+"""
+import csv
+
+# 1.create a csv file method1
+# data = [['姓名', '年龄'], ['张三', 25], ['李四', 30]]
+# with open("test.csv",mode='w',encoding='utf-8-sig',newline='') as f:
+#     csv_writer = csv.writer(f) # create a csv writer
+#     csv_writer.writerows(data)
+
+# # 2.create a csv method2
+# fields = ["name","age","gender"]   
+# rows =[
+#    {"name":"Magret","age":19,"gender":"female"}, 
+#    {"name":"Mark","age":17,"gender":"male"}, 
+#    {"name":"Jerry","age":18,"gender":"male"}, 
+#    {"name":"Jesse","age":18,"gender":"female"}, 
+#    {"name":"Beckey","age":18,"gender":"female"}, 
+# ] 
+# with open("test2.csv",mode='w',encoding='utf-8-sig',newline='') as f:
+#     dict_writer = csv.DictWriter(f,fieldnames=fields)
+#     dict_writer.writeheader() # no params
+#     # dict_writer.writerow({"name":"Mary","age":18,"gender":"female"})
+#     dict_writer.writerows(rows)
+
+# 3.read method1
+# with open("test2.csv",mode='r',encoding='utf-8-sig',newline='') as f:
+#     csv_reader = csv.reader(f)
+#     for row in csv_reader:
+#         print(row)
+
+# 4.read csv method 2
+with open("test2.csv",mode='r',encoding='utf-8-sig',newline='') as f:
+    dict_reader = csv.DictReader(f)
+    for row in dict_reader:
+        print(row)
+```
 
 
 

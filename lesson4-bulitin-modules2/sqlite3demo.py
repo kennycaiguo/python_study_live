@@ -59,5 +59,5 @@ conn.commit()
 # conn.commit()
 
 # 6.delete
-cursor.execute("delete from users where name=?",("Lindy",))
-conn.commit()
+# cursor.execute("delete from users where name=?",("Lindy",))
+# conn.commit()
