@@ -42,3 +42,4 @@ item = heapq.heapreplace(array_d, 5)
 print("after: ", array_d)
 print(item)
 
+
