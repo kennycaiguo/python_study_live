@@ -1,0 +1,29 @@
+#server {
+
+       listen       80;
+
+            server_name  blog.etiantian.org;
+
+       location / {
+
+                root   html/blog;
+
+                index  index.html index.htm;
+
+          }
+
+        machangwei
+        location ~* .*\.(php|php5)?$ {
+
+          root html/blog;
+
+              fastcgi_pass  127.0.0.1:9000;
+
+              fastcgi_index index.php;
+
+              include fastcgi.conf;
+
+          }
+        fffffff
+}
+

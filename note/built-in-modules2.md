@@ -2111,39 +2111,1893 @@ with open("test2.csv",mode='r',encoding='utf-8-sig',newline='') as f:
 
 # 28 . argparse
 
+**作用：** argparse 是 Python 内置的一个用于命令项选项与参数解析的模块，通过在程序中定义好我们需要的参数，argparse 将会从 sys.argv 中解析出这些参数，并自动生成帮助和使用信息。当然，Python 也有第三方的库可用于命令行解析，而且功能也更加强大，比如 docopt，Click。
 
+### 1. 命令行参数分为位置参数和选项参数：
+
+- 位置参数就是程序根据该参数出现的位置来确定的
+  - 如：[root@openstack_1 /]# ls root/ #其中root/是位置参数
+- 选项参数是应用程序已经提前定义好的参数，不是随意指定的
+  - 如：[root@openstack_1 /]# ls -l # -l 就是ls命令里的一个选项参数
+
+### 2. 使用步骤：
+
+（1）import argparse 首先导入模块
+（2）parser = argparse.ArgumentParser（） 创建一个解析对象
+（3）parser.add_argument() 向该对象中添加你要关注的命令行参数和选项
+（4）parser.parse_args() 进行解析
+
+### argparse.ArgumentParser（）方法参数须知：一般我们只选择用description
+
+- description - 命令行帮助的开始文字，大部分情况下，我们只会用到这个参数
+- epilog - 命令行帮助的结尾文字
+- prog - (default: sys.argv[0])程序的名字，一般不需要修改，另外，如果你需要在help中使用到程序的名字，可以使用%(prog)s
+- prefix_chars - 命令的前缀，默认是-，例如-f/–file。有些程序可能希望支持/f这样的选项，可以使用prefix_chars=”/”
+- fromfile_prefix_chars - (default: None)如果你希望命令行参数可以从文件中读取，就可能用到。例如，如果fromfile_prefix_chars=’@’,命令行参数中有一个为”@args.txt”，args.txt的内容会作为命令行参数
+- add_help - 是否增加-h/-help选项 (default: True)，一般help信息都是必须的，所以不用设置啦。
+- parents - 类型是list，如果这个parser的一些选项跟其他某些parser的选项一样，可以用parents来实现继承，例如parents=[parent_parser]
+- 三个允许的值： # class argparse.RawDescriptionHelpFormatter 直接输出description和epilog的原始形式（不进行自动换行和消除空白的操作） # class argparse.RawTextHelpFormatter 直接输出description和epilog以及add_argument中的help字符串的原始形式（不进行自动换行和消除空白的操作） # class argparse.ArgumentDefaultsHelpFormatter 在每个选项的帮助信息后面输出他们对应的缺省值，如果有设置的话。这个最常用吧！
+- argument_default - (default: None)设置一个全局的选项的缺省值，一般每个选项单独设置，所以这个参数用得少，不细说
+- usage - (default: generated)如果你需要修改usage的信息（usage: PROG [-h] [–foo [FOO]] bar [bar …]），那么可以修改这个，一般不要修改。
+- conflict_handler - 不建议使用。这个在极端情况下才会用到，主要是定义两个add_argument中添加的选项的名字发生冲突时怎么处理，默认处理是抛出异常。
+
+### 4. add_argument()方法参数须知：
+
+- name or flags - 指定参数的形式，想写几个写几个，不过我们一般就写两个，一个短参数，一个长参数，看下面的例子”-f”, “–file”
+
+- 可选的选项，位置不固定，想怎么写就怎么写，默认是可选的 # parser.add_argument(“-f”, “–file”, help=”test test test”)
+
+- 位置固定的选项，例如”prog i_am_bar”，这样子的话，i_am_bar就是bar选项的值啦，默认是必须有的 # parser.add_argument(“bar”, help=”test test test”)
+
+- nargs - 指定这个参数后面的value有多少个，例如，我们希望使用-n 1 2 3 4，来设置n的值为[1, 2, 3, 4] #parser.add_argument(“-n”, “–num”, nargs=”+”, type=int) # 这里nargs=”+”表示，如果你指定了-n选项，那么-n后面至少要跟一个参数，+表示至少一个,?表示一个或0个,0个或多个 。
+
+- default - 如果命令行没有出现这个选项，那么使用default指定的默认值 #parser.add_argument(“+g”, “++gold”, help=”test test test”,default=”test_gold”)#需要prefix_chars包含”+” 。
+
+- type - 如果希望传进来的参数是指定的类型（例如 float, int or file等可以从字符串转化过来的类型），可以使用 #parser.add_argument(“-x”, type=int) 。
+
+- choices - 设置参数值的范围，如果choices中的类型不是字符串，记得指定type哦 #parser.add_argument(“-y”, choices=[‘a’, ‘b’, ‘d’])
+
+- required - 通常-f这样的选项是可选的，但是如果required=True那么就是必须的了 #parser.add_argument(“-z”, choices=[‘a’, ‘b’, ‘d’], required=True)
+
+- metavar - 参数的名字，在显示 帮助信息时才用到. # parser.add_argument(“-o”, metavar=”OOOOOO”)
+
+- help - 设置这个选项的帮助信息
+
+- dest - 设置这个选项的值就是解析出来后放到哪个属性中 #parser.add_argument(“-q”, dest=”world”)
+
+- args = parser.parse_args(args) # 如果你没有args参数，那么就使用sys.argv，也就是命令行参数啦。有这个参数，就方便我们调试啊 。# args.world就是-q的值啦
+
+  ## 参考文档2：
+
+  Python的`argparse`模块是标准库中用于解析命令行参数的工具，功能强大且易于使用。本文将详细介绍`argparse`的基本用法、参数设置、类型转换、默认值、范围限制等内容，并通过实际案例展示如何构建命令行工具。
+
+  #### 1. argparse模块简介
+
+  `argparse`是Python标准库中的模块，用于解析命令行参数。通过`argparse`，可以轻松实现命令行工具的参数解析功能，支持短参数（如`-h`）和长参数（如`--help`），并能自动生成帮助信息。
+
+  ```python
+  import argparse
+  
+  # 创建解析器对象
+  parser = argparse.ArgumentParser(description="这是一个简单的命令行工具")
+  
+  # 添加参数
+  parser.add_argument('--name', type=str, help="输入你的名字")
+  
+  # 解析命令行参数
+  args = parser.parse_args()
+  
+  # 输出解析结果
+  print(f"Hello, {args.name}!")
+  1.2.3.4.5.6.7.8.9.10.11.12.13.
+  ```
+
+  #### 2. 参数类型与设置
+
+  `argparse`支持多种参数类型，包括位置参数和可选参数。以下是对两种参数的详细介绍。
+
+  ##### 2.1 位置参数
+
+  位置参数是必须提供的参数，通常用于接收核心输入值。
+
+  ```python
+  import argparse
+  
+  parser = argparse.ArgumentParser(description="计算正方形的面积")
+  parser.add_argument('square', type=int, help="正方形的边长")
+  args = parser.parse_args()
+  
+  # 计算并输出面积
+  print(f"正方形的面积是 {args.square ** 2}")
+  1.2.3.4.5.6.7.8.
+  ```
+
+  ##### 2.2 可选参数
+
+  可选参数是可选的参数，通常用于控制工具的行为。
+
+  ```python
+  import argparse
+  
+  parser = argparse.ArgumentParser(description="控制输出详细程度")
+  parser.add_argument('--verbose', action='store_true', help="增加输出的详细程度")
+  args = parser.parse_args()
+  
+  if args.verbose:
+      print("详细模式已开启")
+  else:
+      print("普通模式")
+  1.2.3.4.5.6.7.8.9.10.
+  ```
+
+  #### 3. 参数的高级设置
+
+  ##### 3.1 设置默认值
+
+  通过`default`参数可以设置默认值，当用户未提供参数时使用默认值。
+
+  ```python
+  import argparse
+  
+  parser = argparse.ArgumentParser(description="设置默认值")
+  parser.add_argument('--port', type=int, default=80, help="指定端口号")
+  args = parser.parse_args()
+  
+  print(f"使用端口号 {args.port}")
+  1.2.3.4.5.6.7.
+  ```
+
+  ##### 3.2 设置参数范围
+
+  通过`choices`参数可以限制参数的取值范围。
+
+  ```python
+  import argparse
+  
+  parser = argparse.ArgumentParser(description="限制参数范围")
+  parser.add_argument('--level', type=int, choices=[1, 2, 3], help="选择级别")
+  args = parser.parse_args()
+  
+  print(f"选择的级别是 {args.level}")
+  1.2.3.4.5.6.7.
+  ```
+
+  ##### 3.3 类型转换
+
+  `argparse`支持多种类型转换，如`int`、`float`、`str`等。
+
+  ```python
+  import argparse
+  
+  parser = argparse.ArgumentParser(description="类型转换")
+  parser.add_argument('--number', type=float, help="输入一个浮点数")
+  args = parser.parse_args()
+  
+  print(f"输入的浮点数是 {args.number}")
+  1.2.3.4.5.6.7.
+  ```
+
+  #### 4. 实际案例：端口扫描器
+
+  以下是一个简单的端口扫描器案例，展示如何使用`argparse`解析命令行参数。
+
+  ```python
+  import argparse
+  
+  # 创建解析器
+  parser = argparse.ArgumentParser(description="端口扫描器")
+  
+  # 添加位置参数（IP地址）
+  parser.add_argument('ip', type=str, help="目标IP地址")
+  
+  # 添加可选参数（端口号）
+  parser.add_argument('--port', type=int, default=80, help="指定端口号")
+  
+  # 解析参数
+  args = parser.parse_args()
+  
+  # 输出解析结果
+  print(f"扫描目标: {args.ip}")
+  print(f"端口号: {args.port}")
+  1.2.3.4.5.6.7.8.9.10.11.12.13.14.15.16.17.
+  ```
+
+  #### 5. 常见问题解答（FAQ）
+
+  | 问题               | 答案                                                         |
+  | ------------------ | ------------------------------------------------------------ |
+  | 如何添加位置参数？ | 使用`parser.add_argument('参数名', type=类型, help="帮助信息")`添加位置参数。 |
+  | 如何添加可选参数？ | 使用`parser.add_argument('--参数名', type=类型, help="帮助信息")`添加可选参数。 |
+  | 如何设置默认值？   | 在`add_argument`中使用`default=值`设置默认值。               |
+  | 如何限制参数范围？ | 在`add_argument`中使用`choices=[值1, 值2, ...]`限制参数范围。 |
+  | 如何实现布尔参数？ | 使用`action='store_true'`或`action='store_false'`实现布尔参数。 |
+
+  #### 6. argparse与其他模块的对比
+
+  | 模块                 | 优点                       | 缺点                     |
+  | -------------------- | -------------------------- | ------------------------ |
+  | `argparse`           | 功能强大，支持复杂参数设置 | 相对复杂，学习曲线较高   |
+  | `getopt`             | 简单易用                   | 功能有限，不支持类型转换 |
+  | `optparse`（已废弃） | 功能较丰富                 | 已废弃，不推荐使用       |
+
+  通过对比可以看出，`argparse`是功能最强大且灵活的命令行解析模块，适合构建复杂工具。
+
+  ------
+
+  本文通过详细解析`argparse`模块的基本用法、参数设置、类型转换等内容，并结合实际案例，帮助读者掌握如何使用`argparse`构建命令行工具。
 
 # 29 . pathlib
 
+## **为什么要用pathlib？**
 
+以前我们处理文件路径时,经常要用到os和os.path模块:
+
+```python
+import os
+
+# 拼接路径
+path = os.path.join('folder', 'subfolder', 'file.txt')
+
+# 获取文件名
+basename = os.path.basename(path)
+
+# 获取目录名
+dirname = os.path.dirname(path)
+
+# 判断是否存在
+exists = os.path.exists(path)
+```
+
+这样写代码有几个问题:
+
+1. 要记住很多零散的函数
+2. 不同系统的路径分隔符不一样
+3. 路径还是普通字符串,容易拼错
+
+而用pathlib后:
+
+```python
+from pathlib import Path
+
+# 创建路径对象
+path = Path('folder') / 'subfolder' / 'file.txt'
+
+# 获取文件名
+basename = path.name
+
+# 获取目录名
+dirname = path.parent
+
+# 判断是否存在
+exists = path.exists()
+```
+
+代码更简洁,更直观,更不容易出错!
+
+## **Path对象详解**
+
+### **创建Path对象**
+
+有很多方法可以创建Path对象:
+
+```python
+from pathlib import Path
+
+# 从字符串创建
+p1 = Path('folder/file.txt')
+
+# 从多个部分创建
+p2 = Path('folder', 'file.txt')
+
+# 用/运算符连接
+p3 = Path('folder') / 'file.txt'
+
+# 从home目录创建
+home = Path.home()
+
+# 当前目录
+current = Path.cwd()
+
+# 绝对路径
+abs_path = Path('file.txt').absolute()
+```
+
+### **路径信息获取**
+
+Path对象提供了丰富的属性来获取路径信息:
+
+```python
+path = Path('/home/user/docs/file.txt')
+
+# 文件名相关
+path.name          # 'file.txt'
+path.stem          # 'file'
+path.suffix        # '.txt'
+path.suffixes      # ['.tar', '.gz']用于多扩展名
+path.with_suffix('.md')  # 更改扩展名
+
+# 目录相关
+path.parent        # 父目录 /home/user/docs
+path.parents[0]    # 父目录 /home/user/docs
+path.parents[1]    # 祖父目录 /home/user
+path.parts         # ('/', 'home', 'user', 'docs', 'file.txt')
+
+# 路径类型
+path.is_absolute() # 是否是绝对路径
+path.is_relative_to('/home')  # 是否是某个路径的子路径
+```
+
+### **常用属性和方法汇总**
+
+以下是Path对象最常用的属性和方法:
+
+### **路径信息**
+
+- `name`: 文件名
+- `stem`: 不带后缀的文件名
+- `suffix`: 文件后缀
+- `suffixes`: 所有文件后缀列表
+- `parent`: 父目录
+- `parents`: 所有父目录的序列
+- `parts`: 路径的各个部分
+- `drive`: 驱动器名称(Windows)
+- `anchor`: 驱动器和根目录
+- `root`: 根目录
+
+### **路径判断**
+
+- `exists()`: 是否存在
+- `is_file()`: 是否是文件
+- `is_dir()`: 是否是目录
+- `is_absolute()`: 是否是绝对路径
+- `is_symlink()`: 是否是[符号链接](https://zhida.zhihu.com/search?content_id=254515571&content_type=Article&match_order=1&q=符号链接&zd_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ6aGlkYV9zZXJ2ZXIiLCJleHAiOjE3NzgxODE1MjksInEiOiLnrKblj7fpk77mjqUiLCJ6aGlkYV9zb3VyY2UiOiJlbnRpdHkiLCJjb250ZW50X2lkIjoyNTQ1MTU1NzEsImNvbnRlbnRfdHlwZSI6IkFydGljbGUiLCJtYXRjaF9vcmRlciI6MSwiemRfdG9rZW4iOm51bGx9.vmdcCL0OTj6_L9Cfk3wNx261EeP2COZa_Zim5zUa9dQ&zhida_source=entity)
+- `is_socket()`: 是否是套接字
+- `is_fifo()`: 是否是管道
+- `is_block_device()`: 是否是块设备
+- `is_char_device()`: 是否是字符设备
+
+### **路径操作**
+
+- `resolve()`: 解析绝对路径,处理符号链接
+- `absolute()`: 返回绝对路径
+- `relative_to()`: 计算相对路径
+- `with_name()`: 更改文件名
+- `with_suffix()`: 更改文件后缀
+- `joinpath()`: 拼接路径
+- `match()`: 匹配[通配符模式](https://zhida.zhihu.com/search?content_id=254515571&content_type=Article&match_order=1&q=通配符模式&zd_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ6aGlkYV9zZXJ2ZXIiLCJleHAiOjE3NzgxODE1MjksInEiOiLpgJrphY3nrKbmqKHlvI8iLCJ6aGlkYV9zb3VyY2UiOiJlbnRpdHkiLCJjb250ZW50X2lkIjoyNTQ1MTU1NzEsImNvbnRlbnRfdHlwZSI6IkFydGljbGUiLCJtYXRjaF9vcmRlciI6MSwiemRfdG9rZW4iOm51bGx9._bbZzVcakc17NbGVe-i7fFsMjKIueodZKsbrEwVPBiM&zhida_source=entity)
+- `expanduser()`: 展开用户路径(~)
+
+### **文件操作**
+
+- `touch()`: 创建空文件
+- `unlink()`: 删除文件
+- `rename()`: 重命名
+- `replace()`: 覆盖重命名
+- `chmod()`: 修改权限
+- `lchmod()`: 修改符号链接权限
+- `symlink_to()`: 创建符号链接
+- `hardlink_to()`: 创建[硬链接](https://zhida.zhihu.com/search?content_id=254515571&content_type=Article&match_order=1&q=硬链接&zd_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ6aGlkYV9zZXJ2ZXIiLCJleHAiOjE3NzgxODE1MjksInEiOiLnoazpk77mjqUiLCJ6aGlkYV9zb3VyY2UiOiJlbnRpdHkiLCJjb250ZW50X2lkIjoyNTQ1MTU1NzEsImNvbnRlbnRfdHlwZSI6IkFydGljbGUiLCJtYXRjaF9vcmRlciI6MSwiemRfdG9rZW4iOm51bGx9.IbTsB1Ia2Cx0uKLwLHioVWOYlxswoE6VED9NTtkiE8c&zhida_source=entity)
+- `stat()`: 获取文件状态
+- `lstat()`: 获取符号链接状态
+- `owner()`: 获取所有者
+- `group()`: 获取所属组
+
+### **目录操作**
+
+- `mkdir()`: 创建目录
+- `rmdir()`: 删除目录
+- `iterdir()`: 遍历目录
+- `glob()`: 使用通配符搜索
+- `rglob()`: 递归使用通配符搜索
+
+### **文件读写**
+
+- `read_text()`: 读取文本
+- `read_bytes()`: 读取二进制
+- `write_text()`: 写入文本
+- `write_bytes()`: 写入二进制
+- `open()`: 打开文件
+
+## **实际应用举例**
+
+### **1. 基本文件操作**
+
+```python
+from pathlib import Path
+
+# 创建文件
+path = Path('test.txt')
+path.touch()
+
+# 写入内容
+path.write_text('Hello World')
+
+# 读取内容
+content = path.read_text()
+
+# 删除文件
+path.unlink()
+```
+
+### **2. 目录操作**
+
+```python
+from pathlib import Path
+
+# 创建目录
+path = Path('new_folder')
+path.mkdir(exist_ok=True)
+
+# 创建多级目录
+path = Path('a/b/c')
+path.mkdir(parents=True, exist_ok=True)
+
+# 遍历目录
+for item in path.iterdir():
+    print(item.name)
+
+# 搜索文件
+for py_file in path.glob('*.py'):
+    print(py_file)
+```
+
+### **3. 路径处理**
+
+```python
+from pathlib import Path
+
+path = Path('docs/images/logo.png')
+
+# 获取上级目录
+parent = path.parent  # docs/images
+grandparent = path.parent.parent  # docs
+
+# 修改文件名
+new_path = path.with_name('icon.png')  # docs/images/icon.png
+
+# 修改扩展名
+new_path = path.with_suffix('.jpg')  # docs/images/logo.jpg
+
+# 获取相对路径
+rel_path = path.relative_to('docs')  # images/logo.png
+```
+
+## **使用技巧**
+
+1. **路径连接**
+
+- 使用 / 运算符,不要用字符串拼接
+- 可以连接字符串或Path对象
+
+```python
+path = Path('folder') / 'subfolder' / 'file.txt'
+```
+
+1. **文件判断**
+
+- 操作前检查文件是否存在
+- 区分文件和目录
+
+```python
+if path.exists() and path.is_file():
+    # 处理文件
+```
+
+1. **编码处理**
+
+- 读写文本时指定编码
+
+```python
+content = path.read_text(encoding='utf-8')
+path.write_text(content, encoding='utf-8')
+```
+
+1. **异常处理**
+
+- 捕获可能的异常
+
+```python
+try:
+    path.unlink()
+except FileNotFoundError:
+    print('文件不存在')
+except PermissionError:
+    print('没有权限')
+```
+
+## **常见问题**
+
+1. Path对象不能直接和字符串相加
+
+```python
+# 错误
+path = Path('folder') + '/file.txt'
+
+# 正确
+path = Path('folder') / 'file.txt'
+```
+
+1. mkdir()默认不创建父目录
+
+```python
+# 创建多级目录要加parents=True
+Path('a/b/c').mkdir(parents=True)
+```
+
+1. unlink()和rmdir()的区别
+
+- unlink()删除文件
+- rmdir()只能删除空目录
+
+1. resolve()和absolute()的区别
+
+- resolve()会处理符号链接
+- absolute()只是返回绝对路径
+
+pathlib的优势:
+
+1. 面向对象的API,更符合Python风格
+2. 自动处理不同系统的路径差异
+3. 提供丰富的路径操作方法
+4. 代码更简洁易读
+
+建议:
+
+1. 新项目优先使用pathlib
+2. 路径处理统一使用Path对象
+3. 注意正确处理异常情况
+4. 考虑文件编码问题
 
 # 30 .glob
+
+**glob模块**也是Python标准库中一个重要的模块，主要用来**查找符合特定规则的目录和文件**，并将搜索的到的**结果返回到一个列表中**。使用这个模块最主要的原因就是，该模块支持几个特殊的[正则通配符](https://zhida.zhihu.com/search?content_id=199065431&content_type=Article&match_order=1&q=正则通配符&zd_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ6aGlkYV9zZXJ2ZXIiLCJleHAiOjE3NzgxODY2NTYsInEiOiLmraPliJnpgJrphY3nrKYiLCJ6aGlkYV9zb3VyY2UiOiJlbnRpdHkiLCJjb250ZW50X2lkIjoxOTkwNjU0MzEsImNvbnRlbnRfdHlwZSI6IkFydGljbGUiLCJtYXRjaF9vcmRlciI6MSwiemRfdG9rZW4iOm51bGx9.tnrED2rb2mf4pFWBhsLGpyDIwcW6eNSTPDO78U276Vg&zhida_source=entity)，用起来贼方便，这个将会在下方为大家进行详细讲解。
+
+![img](https://pic2.zhimg.com/v2-7fd0b20a09e63aba2da1c874a0ca64a7_1440w.jpg)
+
+## 一、支持4个常用的通配符
+
+使用glob模块能够快速查找我们想要的目录和文件，就是由于它支持*、**、? 、[ ]这三个通配符，那么它们到底是 什么意思呢？
+
+*：匹配0个或多个字符；
+
+**：匹配所有文件、目录、子目录和子目录里的文件（3.5版本新增）；
+
+?：代匹配一个字符；
+
+[]：匹配指定范围内的字符，如[0-9]匹配数字，[a-z]匹配小写字母；
+
+注意：这3个通配符的用法，将在讲函数的时候，一起带大家操作一遍；
+
+## 二、glob库中主要的3个函数
+
+其实glob库很简单，只有3个主要函数供我们使用，它们分别是glob()、iglob()、escape()函数，因此学习起来特别容易。
+
+glob.glob()：返回符合匹配条件的所有文件的路径；
+
+glob.iglob()：返回一个迭代器对象，需要循环遍历获取每个元素，得到的也是符合匹配条件的所有文件的路径；
+
+glob.escape()：escape可以忽略所有的特殊字符，就是星号、问号、中括号，用处不大；
+
+recursive=False：代表递归调用，与特殊通配符“**”一同使用，默认为False，False表示不递归调用，True表示递归调用；
+
+#### 示例1.glob.glob() ->list
+
+```
+import glob #获取指定目录下的所有图片
+print glob.glob(r"E:/Picture/*/*.jpg") #获取上级目录的所有.py文件
+print glob.glob(r'../*.py') #相对路径
+```
+
+#### 示例2.glob.iglob()  ->generator
+
+```
+import glob
+
+print(glob.iglob("../lesson3-builtin-modules1/*.py")) # <generator object _iglob at 0x00000160A491C7C0>
+for i in glob.iglob("../lesson3-builtin-modules1/*.py"):
+    print(i)
+```
 
 
 
 # 31 . tempfile
 
+临时目录就是个生命周期很短的文件夹，专门用来存放那些不需要长期保留的数据。用完之后连同里面的内容一起删掉，文件系统保持干净。
 
+Python 的 `tempfile` 模块提供了一套完整的解决方案，这些临时文件和目录在不需要的时候会自动清理掉。
+
+### 为什么要用临时目录
+
+临时目录在实际开发中有几个明显的好处：
+
+自动清理机制省去了手动删除的步骤，每个临时目录都有唯一标识避免文件名冲突。系统会自动选择安全的存储位置，Unix 系统用 `/tmp`，Windows 用 `%TEMP%`。多线程和多进程环境下也能稳定工作，特别适合测试场景和需要中间存储的情况。
+
+### 什么场景下需要临时目录
+
+需要一个临时空间来存放中间计算结果或临时文件。写单元测试的时候模拟文件操作，完了自动清理。下载或解压的数据不需要长期保存。处理用户上传的文件，在保存最终结果之前需要一个缓冲区。构建自动化流程时，要确保不留下任何痕迹。
+
+### tempfile 模块基础用法
+
+```
+import tempfile  
+import os  
+# Create a temporary directory
+with tempfile.TemporaryDirectory() as temp_dir:  
+    print(f"Temporary directory created at: {temp_dir}")  
+    # Create a temporary file inside the directory
+    file_path = os.path.join(temp_dir, "sample.txt")  
+    with open(file_path, "w") as f:  
+        f.write("Hello, Temporary World!")  
+    # Read back the file
+    with open(file_path, "r") as f:  
+        print(f.read())  
+# At this point, the directory and its contents are deleted automatically
+ print("Temporary directory cleaned up automatically.")
+```
+
+### 手动控制临时目录的生命周期
+
+有时候需要更精细的控制，比如临时目录的生命周期超出单个函数作用域，这时候可以用 `tempfile.mkdtemp()`：
+
+```
+import shutil  
+import os  
+# Create a temporary directory manually
+temp_dir = tempfile.mkdtemp()  
+print(f"Created temporary directory: {temp_dir}")  
+# Work inside it
+file_path = os.path.join(temp_dir, "example2.txt")  
+with open(file_path, "w") as f:  
+    f.write("Manual cleanup required!")  
+print("Files inside temp dir:", os.listdir(temp_dir))  
+# Clean up manually when done
+shutil.rmtree(temp_dir)  
+print("Temporary directory removed.")
+```
+
+### 自定义临时目录的命名和位置
+
+`tempfile` 支持给临时目录添加前缀和后缀，方便调试时识别：
+
+```javascript
+ import tempfile  
+ # Create with custom prefix and suffix
+ with tempfile.TemporaryDirectory(prefix="myapp_", suffix="_data") as temp_dir:  
+     print(f"Created: {temp_dir}")
+```
+
+输出类似这样：
+
+```javascript
+ Created: /tmp/myapp_abcd1234_data
+```
+
+还可以指定父目录：注意，这个父目录必须存在
+
+```javascript
+ with tempfile.TemporaryDirectory(dir="/path/to/parent") as temp_dir:  
+     print(temp_dir)
+```
+
+当系统默认的临时目录权限不够或者空间不足时，这个功能就派上用场了。
+
+### 实战案例：安全处理 ZIP 文件
+
+下载大型 ZIP 文件后临时解压处理，处理完就清理掉：
+
+```javascript
+import tempfile  
+import zipfile  
+def extract_and_process(zip_path):  
+    with tempfile.TemporaryDirectory() as tmp_dir:  
+        print(f"Extracting to {tmp_dir}")  
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:  
+            zip_ref.extractall(tmp_dir)  
+        # Process extracted files
+        for file in os.listdir(tmp_dir):  
+             print("Processing:", file)
+```
+
+整个流程结束后，解压的文件夹自动删除，磁盘不会留下任何垃圾文件。
+
+### 实战案例：动态生成报告
+
+应用程序按需生成报告文件（PDF、CSV 之类），不需要永久存储：
+
+```javascript
+import tempfile  
+import csv  
+import os  
+def generate_temp_report(data):  
+    with tempfile.TemporaryDirectory() as tmp_dir:  
+        file_path = os.path.join(tmp_dir, "report.csv")  
+        with open(file_path, "w", newline="") as csvfile:  
+            writer = csv.writer(csvfile)  
+            writer.writerow(["Name", "Age"])  
+            writer.writerows(data)  
+        print(f"Report generated at: {file_path}")  
+         # Here you can upload it, email it, or read the content directly
+```
+
+生成的报告可以直接上传、发邮件或者读取内容，不会在本地留存。
+
+### 实战案例：单元测试中的文件操作
+
+写单元测试时在项目目录下创建很多文件夹显然不是好主意，所以临时目录完美解决这个问题：
+
+```javascript
+import tempfile  
+import unittest  
+import os  
+class TestFileOperations(unittest.TestCase):  
+    def test_temp_directory(self):  
+        with tempfile.TemporaryDirectory() as temp_dir:  
+            file_path = os.path.join(temp_dir, "test.txt")  
+            with open(file_path, "w") as f:  
+                f.write("test data")  
+              
+             self.assertTrue(os.path.exists(file_path))
+```
+
+每个测试用例都在独立的临时环境中运行，互不干扰，也不需要手动清理。
+
+### 嵌套临时目录
+
+复杂场景下可能需要嵌套的临时目录结构：
+
+```javascript
+ import tempfile  
+ import os  
+ with tempfile.TemporaryDirectory() as root_dir:  
+     print(f"Root: {root_dir}")  
+     sub_dir = tempfile.mkdtemp(dir=root_dir)  
+     print(f"Nested: {sub_dir}")
+```
+
+多阶段数据处理流程中，每个阶段可以有自己的独立沙箱环境。
+
+### 使用临时目录的几个注意事项
+
+始终使用上下文管理器 `with tempfile.TemporaryDirectory()` 来确保自动清理。不要硬编码 `/tmp` 路径，用 `tempfile.gettempdir()` 获取系统临时目录。如果用了 `mkdtemp()` 就必须手动调用 `shutil.rmtree()` 清理。给临时目录加上有意义的前缀方便调试时快速定位。临时数据随时可能被系统清理，不要在里面存放需要持久化的信息。
+
+### 几个实用技巧
+
+获取系统临时目录路径：
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+ importtempfile
+ print(tempfile.gettempdir())
+```
+
+生成唯一文件名（但不创建文件）：
+
+```javascript
+ tempfile.mktemp()
+```
+
+不过要注意，直接用 `mktemp()` 有安全风险，生产环境建议用 `NamedTemporaryFile` 或 `TemporaryDirectory`。
+
+### 生产环境中的实际应用
+
+下面这段代码展示了如何在 PDF 处理项目中使用临时目录。整个流程包括 PDF 转图片、图片转 Markdown、最后合并成完整文档：
+
+```javascript
+import os  
+import io  
+import shutil  
+import tempfile  
+from pathlib import Path  
+from typing import Iterable, Optional, Callable, Tuple  
+
+# Requires: pip install pymupdf pillow  
+import fitz  # PyMuPDF  
+ from PIL import Image  
+```
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+ def process_pdfs_to_markdown(  
+    pdf_paths: Iterable[str | os.PathLike],  
+    output_dir: str | os.PathLike,  
+    *,  
+    page_image_dpi: int = 200,  
+    image_format: str = "PNG",  
+    llm_page_markdown_fn: Optional[Callable[[Path], str]] = None,  
+) -> Tuple[list[Path], list[Path]]:  
+    """  
+    Convert each input PDF into page images using a temporary workspace, run an LLM on each page image to get  
+    Markdown, save one MD per page (still in a temp workspace), then merge the per-PDF Markdown into a single  
+    non-temporary Markdown file per PDF in `output_dir`.  
+      
+    Non-temp file handling is kept simple (write final merged .md into `output_dir`), while the heavy lifting  
+    uses temp directories that auto-clean on success or error.  
+      
+    Parameters  
+    ----------  
+    pdf_paths : Iterable[str | PathLike]  
+        Paths to PDF files to process.  
+    output_dir : str | PathLike  
+        Directory where FINAL merged Markdown files (non-temp) will be written.  
+    page_image_dpi : int, optional  
+        Rendering resolution for converting PDF pages to images. Higher DPI → sharper (default 200).  
+    image_format : str, optional  
+        Image format for page renders (e.g., "PNG", "JPEG"). Default "PNG".  
+    llm_page_markdown_fn : Callable[[Path], str], optional  
+        A callable that takes a Path to a page image and returns Markdown text for that page.  
+        If not provided, a placeholder stub will be used.  
+      
+    Returns  
+    -------  
+    Tuple[list[Path], list[Path]]  
+        A tuple (final_markdown_files, per_page_markdown_files_flattened)  
+        - final_markdown_files: list of merged Markdown file paths written in output_dir (non-temp)  
+        - per_page_markdown_files_flattened: flattened list of all per-page MD files (in temp, ephemeral)  
+          (Returned for inspection/logging; these will be deleted when temp dir goes away.)  
+      
+    Notes  
+    -----  
+    - Uses a single top-level TemporaryDirectory for the whole batch to keep structure neat.  
+    - For each PDF, creates `/tmp/.../<pdf_stem>/images` and `/tmp/.../<pdf_stem>/md`.  
+    - Each page is rendered to an image file named `page-<index>.<ext>`.  
+    - Each page's Markdown is saved to `page-<index>.md`.  
+    - Finally, merges all page MDs for that PDF into `<output_dir>/<pdf_stem>.md` (non-temp).  
+    - Replace `llm_stub_markdown_from_image` with your actual LLM call (OpenAI, local VLM, etc.).  
+      
+    Pseudocode hint for real LLM integration  
+    ----------------------------------------  
+    def llm_page_markdown_fn(img_path: Path) -> str:  
+        # pseudo:  
+        # bytes = img_path.read_bytes()  
+        # resp = my_llm_client.vision_to_md(image=bytes, system_prompt="Extract content as Markdown.")  
+        # return resp.markdown  
+        pass  
+    """  
+    output_dir = Path(output_dir)  
+    output_dir.mkdir(parents=True, exist_ok=True)  
+
+    # --- Local helper: default LLM stub (replace this with your LLM call) ---  
+    def llm_stub_markdown_from_image(img_path: Path) -> str:  
+        # This is a placeholder. Swap with a real LLM/VLM call to convert the image to Markdown.  
+        # You can pass the image bytes and ask the model to produce clean Markdown with headings, tables, lists, etc.  
+        return f"# Page extracted (stub)\n\n_Image: {img_path.name}_\n\n> Replace this with real LLM Markdown output."  
+
+    # Choose the LLM function (user-supplied or stub)  
+    llm_to_md = llm_page_markdown_fn or llm_stub_markdown_from_image  
+
+    final_markdown_files: list[Path] = []  
+    per_page_markdown_files_flattened: list[Path] = []  
+
+    # Top-level temp root for the entire run  
+    with tempfile.TemporaryDirectory(prefix="pdf2img-md_") as temp_root:  
+        temp_root = Path(temp_root)  
+
+        for pdf_path in map(Path, pdf_paths):  
+            if not pdf_path.exists() or pdf_path.suffix.lower() != ".pdf":  
+                # Skip invalid entries gracefully; alternatively raise ValueError  
+                continue  
+
+            pdf_stem = pdf_path.stem  
+            pdf_temp_dir = temp_root / pdf_stem  
+            images_dir = pdf_temp_dir / "images"  
+            md_dir = pdf_temp_dir / "md"  
+            images_dir.mkdir(parents=True, exist_ok=True)  
+            md_dir.mkdir(parents=True, exist_ok=True)  
+
+            # --- 1) Render pages to images in temp ---  
+            # Using PyMuPDF: fast, no external poppler dependency  
+            pages_rendered: list[Path] = []  
+            with fitz.open(pdf_path) as doc:  
+                # scale based on DPI (PyMuPDF normally uses zoom factors; convert DPI to zoom)  
+                # Base DPI ~72; zoom = target_dpi / 72  
+                zoom = page_image_dpi / 72.0  
+                mat = fitz.Matrix(zoom, zoom)  
+
+                for page_index in range(doc.page_count):  
+                    page = doc.load_page(page_index)  
+                    pix = page.get_pixmap(matrix=mat, alpha=False)  # no alpha for standard formats  
+                    img_bytes = pix.tobytes(output=image_format.lower())  
+
+                    img_name = f"page-{page_index + 1}.{image_format.lower()}"  
+                    img_path = images_dir / img_name  
+
+                    # Save via PIL to ensure consistent headers/metadata if needed  
+                    with Image.open(io.BytesIO(img_bytes)) as im:  
+                        im.save(img_path, format=image_format)  
+
+                    pages_rendered.append(img_path)  
+
+            # --- 2) For each page image, call LLM to get Markdown; save per-page MD in temp ---  
+            page_md_files: list[Path] = []  
+            for img_path in pages_rendered:  
+                md_text = llm_to_md(img_path)  # <-- your real LLM call here  
+                md_path = md_dir / (img_path.stem + ".md")  
+                md_path.write_text(md_text, encoding="utf-8")  
+                page_md_files.append(md_path)  
+                per_page_markdown_files_flattened.append(md_path)  
+
+            # --- 3) Merge per-page MD into a FINAL non-temp Markdown file (one per PDF) ---  
+            final_md_path = output_dir / f"{pdf_stem}.md"  
+            # If you want sophisticated merging rules, implement here (e.g., front matter, TOC).  
+            # Pseudocode for richer post-processing could be:  
+            #   combined = render_front_matter(pdf_path) + "\n" + concatenate_markdown(page_md_files) + "\n" + add_toc()  
+            #   final_md_path.write_text(combined, encoding="utf-8")  
+            with final_md_path.open("w", encoding="utf-8") as fout:  
+                fout.write(f"<!-- Source PDF: {pdf_path.name} -->\n")  
+                fout.write(f"# {pdf_stem}\n\n")  
+                for i, md_file in enumerate(sorted(page_md_files, key=lambda p: p.name), start=1):  
+                    fout.write(f"\n\n---\n\n<!-- Page {i} -->\n\n")  
+                    fout.write(md_file.read_text(encoding="utf-8"))  
+
+            final_markdown_files.append(final_md_path)  
+
+        # NOTE:  
+        # All temp content (images & per-page MDs) is automatically cleaned up on exit.  
+
+     return final_markdown_files, per_page_markdown_files_flattened
+```
+
+这段代码的亮点在于所有中间文件（图片、单页 Markdown）都存放在临时目录里，处理完自动清理，只保留最终合并后的文档。整个流程非常干净，不会在磁盘上留下任何垃圾文件。
+
+实际使用时把 `llm_stub_markdown_from_image` 替换成真正的 LLM 调用（比如 OpenAI 的 Vision API 或者本地视觉模型），就能实现完整的 PDF 文档处理流程。
+
+### 总结
+
+临时目录在 Python 开发中确实是个实用的工具，文件处理更高效也更安全。不管是处理用户上传、写单元测试还是构建数据流水线，`tempfile.TemporaryDirectory()` 都能让代码更简洁、更可靠。掌握它的用法能省不少麻烦，代码质量也能上个台阶。
 
 # 32 . xml
 
+## 参考文档1
 
+## 一、Python XML解析
+
+在Python中，解析XML文件通常使用内置的`xml.etree.ElementTree`模块，它提供了一个轻量级、高效的方式来解析XML文档。此外，还有其他的第三方库，如`lxml`和`xml.dom`，它们提供了更多的功能和灵活性。
+
+下面是使用`xml.etree.ElementTree`模块解析XML文件的一个基本示例：
+
+首先，假设你有一个名为`example.xml`的XML文件，内容如下：
+
+```xml
+<root>
+    <element1 attribute="value1">
+        <subelement1>Text inside subelement1</subelement1>
+        <subelement2 attribute2="value2">Text inside subelement2</subelement2>
+    </element1>
+    <element2>
+        <subelement3>Text inside subelement3</subelement3>
+    </element2>
+</root>
+```
+
+接下来，你可以使用`xml.etree.ElementTree`来解析这个文件：
+
+```python
+import xml.etree.ElementTree as ET
+
+# 解析XML文件
+tree = ET.parse('example.xml')
+root = tree.getroot()
+
+# 遍历所有子元素
+for child in root:
+    print(child.tag, child.attrib)  # 打印标签名和属性
+
+    # 遍历子元素的子元素
+    for subchild in child:
+        print(subchild.tag, subchild.attrib, subchild.text)  # 打印子标签名、属性和文本内容
+
+# 查找具有特定标签的元素
+for element in root.iter('subelement1'):
+    print(element.text)  # 打印subelement1的文本内容
+
+# 查找具有特定属性的元素
+for element in root.iter('subelement2'):
+    print(element.attrib)  # 打印subelement2的属性
+```
+
+上面的代码示例演示了如何使用`xml.etree.ElementTree`来解析XML文件，并遍历其中的元素和属性。`iter()`方法用于查找具有特定标签的元素。
+
+## 二、Python 操作XML
+
+在Python中操作XML文件通常涉及读取、解析、修改和写入XML内容。下面是一个使用`xml.etree.ElementTree`模块来操作XML文件的案例。
+
+首先，我们创建一个简单的XML文件`example.xml`：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<students>
+    <student rollno="101">
+        <firstname>John</firstname>
+        <lastname>Doe</lastname>
+        <marks>95</marks>
+    </student>
+    <student rollno="102">
+        <firstname>Jane</firstname>
+        <lastname>Doe</lastname>
+        <marks>88</marks>
+    </student>
+</students>
+```
+
+接下来，我们将使用Python代码来读取这个XML文件，对其进行修改，然后再写入到一个新的文件中。
+
+```python
+import xml.etree.ElementTree as ET
+
+# 读取XML文件
+tree = ET.parse('example.xml')
+root = tree.getroot()
+
+# 遍历所有学生并打印他们的信息
+for student in root.findall('student'):
+    rollno = student.get('rollno')
+    firstname = student.find('firstname').text
+    lastname = student.find('lastname').text
+    marks = student.find('marks').text
+    print(f"Student Roll No: {rollno}, Name: {firstname} {lastname}, Marks: {marks}")
+
+# 修改学生信息
+for student in root.findall('student'):
+    if student.get('rollno') == '101':
+        # 修改第一个学生的成绩
+        student.find('marks').text = '98'
+
+# 写入到新的XML文件
+tree.write('modified_example.xml')
+```
+
+运行上面的代码后，你会在控制台看到每个学生的信息，并且`modified_example.xml`文件会被创建或覆盖，其中第一个学生的成绩被更新为`98`：
+
+```xml
+<?xml version='1.0' encoding='UTF-8'?>
+<students>
+    <student rollno="101">
+        <firstname>John</firstname>
+        <lastname>Doe</lastname>
+        <marks>98</marks>  <!-- 这里成绩被修改了 -->
+    </student>
+    <student rollno="102">
+        <firstname>Jane</firstname>
+        <lastname>Doe</lastname>
+        <marks>88</marks>
+    </student>
+</students>
+```
+
+在这个案例中，我们展示了如何使用`xml.etree.ElementTree`来解析XML文件，遍历元素，修改元素内容，并将修改后的XML写回到文件中。`findall`方法用于查找所有匹配的元素，`find`方法用于查找第一个匹配的元素，`get`方法用于获取元素的属性值。`write`方法用于将修改后的树写回到文件中。
+
+如果你想执行更复杂的XML操作，比如添加新的元素或删除现有的元素，你可以使用`SubElement`和`remove`方法。此外，`lxml`库提供了更多功能和灵活性，特别是当处理大型或复杂的XML文件时。
+
+## 三、ContentHandler 类方法介绍
+
+在Python中，`ContentHandler` 类通常与`xml.sax`模块相关联，它是SAX（Simple API for XML）解析器中的一个关键组件。SAX是一个基于事件的XML解析方法，而`ContentHandler`则是定义这些事件处理程序的基类。通过继承`ContentHandler`类并重写其方法，你可以自定义XML解析过程中的行为。
+
+下面是一些`ContentHandler`类的主要方法及其描述：
+
+- `startDocument()`: 当文档开始解析时被调用。
+- `endDocument()`: 当文档解析结束时被调用。
+- `startElement(name, attrs)`: 当遇到XML元素的开始标签时被调用，`name`是元素的名称，`attrs`是元素的属性字典。
+- `endElement(name)`: 当遇到XML元素的结束标签时被调用，`name`是元素的名称。
+- `characters(content)`: 当遇到XML元素或属性的字符数据时被调用，`content`是字符数据的内容。
+
+下面是一个使用`ContentHandler`类的简单案例代码，该代码读取一个XML文件并打印出所有元素的名称和属性：
+
+```python
+import xml.sax
+from xml.sax.handler import ContentHandler
+
+class MyContentHandler(ContentHandler):
+    def startElement(self, name, attrs):
+        print(f"开始元素: {name}")
+        for attr_name, attr_value in attrs.items():
+            print(f"  属性: {attr_name} = {attr_value}")
+
+    def endElement(self, name):
+        print(f"结束元素: {name}")
+
+    def characters(self, content):
+        print(f"字符数据: {content.strip()}")
+
+# 创建一个SAX解析器
+parser = xml.sax.make_parser()
+
+# 将自定义的ContentHandler关联到解析器
+parser.setContentHandler(MyContentHandler())
+
+# 打开XML文件并解析
+with open('example.xml', 'r') as f:
+    parser.parse(f)
+```
+
+在这个案例中，我们创建了一个`MyContentHandler`类，它继承自`ContentHandler`。我们重写了`startElement`、`endElement`和`characters`方法来处理XML文档中的不同事件。然后，我们创建了一个SAX解析器，并将我们的`MyContentHandler`实例设置为解析器的内容处理程序。最后，我们打开XML文件并使用解析器进行解析。
+
+请注意，这个案例仅打印了元素名称、属性和字符数据。在实际应用中，你可能需要根据XML文档的结构和内容进行更复杂的处理。此外，SAX解析器是基于事件的，因此它通常比DOM解析器更快，特别是在处理大型XML文件时。
+
+## 参考文档2 ： https://www.cnblogs.com/qing-chen/p/7289202.html
+
+## 参考文档3： https://www.cnblogs.com/kn-zheng/p/17013201.html
 
 # 33 . string
 
+# python string模块详解
 
+
+
+**简介** 在python编程程序时经常要使用到对字符的处理功能，字符在python中被分为好几类，比如字母、数字、其它字符等，这样在处理时需要程序员针对不同类型进行不同对待。为了方便
+
+   在python编程程序时经常要使用到对字符的处理功能，字符在python中被分为好几类，比如字母、数字、其它字符等，这样在处理时需要程序员针对不同类型进行不同对待。为了方便大家对各类字符数据的处理和操作，在python语言中，提供一个字符串模块，叫string模块。Python中的string模块用于对字符串的一些分类和操作，下面整理了string的主要常量、函数及用法。
+  string模块在使用时要导入模块,使用如下命令：
+
+```python
+import string
+```
+
+## 字符串常量
+
+| 常数                       | 含义                                                 |
+| -------------------------- | ---------------------------------------------------- |
+| **string.ascii_lowercase** | 小写字母'abcdefghijklmnopqrstuvwxyz'                 |
+| **string.ascii_uppercase** | 大写的字母'ABCDEFGHIJKLMNOPQRSTUVWXYZ'               |
+| **string.ascii_letters**   | ascii_lowercase和ascii_uppercase常量的连接串         |
+| **string.digits**          | 数字0到9的字符串:'0123456789'                        |
+| string.hexdigits           | 字符串'0123456789abcdefABCDEF'                       |
+| string.octdigits           | 字符串'01234567'                                     |
+| string.punctuation         | 所有标点字符                                         |
+| string.printable           | 可打印的字符的字符串。包含数字、字母、标点符号和空格 |
+| string.whitespace          | 空白字符 '\t\n\x0b\x0c\r '                           |
+
+例如代码如下：
+
+```python
+import string
+print(string.ascii_lowercase)
+print(string.ascii_uppercase)
+print(string.ascii_letters)
+print(string.digits)
+print(string.hexdigits)
+print(string.octdigits)
+print(string.punctuation)
+```
+
+程序运行屏幕显示为：
+![img](https://www.ddbji.com/d/file/2022/03/07772.png)
+
+## 常用方法，这些其实是str类的方法
+
+| 常用方法                                     | 描述                                                         |
+| -------------------------------------------- | ------------------------------------------------------------ |
+| str.capitalize()                             | 把字符串的首字母大写                                         |
+| str.center(width)                            | 将原字符串用空格填充成一个长度为width的字符串，原字符串内容居中 |
+| str.count(s)                                 | 返回字符串s在str中出现的次数                                 |
+| str.decode(encoding='UTF-8',errors='strict') | 以指定编码格式解码字符串                                     |
+| str.encode(encoding='UTF-8',errors='strict') | 以指定编码格式编码字符串                                     |
+| str.endswith(s)                              | 判断字符串str是否以字符串s结尾                               |
+| str.find(s)                                  | 返回字符串s在字符串str中的位置索引，没有则返回-1             |
+| str.index(s)                                 | 和find()方法一样，但是如果s不存在于str中则会抛出异常         |
+| str.isalnum()                                | 如果str至少有一个字符并且都是字母或数字则返回True,否则返回False |
+| str.isalpha()                                | 如果str至少有一个字符并且都是字母则返回True,否则返回False    |
+| str.isdigit()                                | 如果str只包含数字则返回 True 否则返回 False                  |
+| str.islower()                                | 如果str存在区分大小写的字符，并且都是小写则返回True 否则返回False |
+| str.isspace()                                | 如果str中只包含空格，则返回 True，否则返回 False             |
+| str.istitle()                                | 如果str是标题化的(单词首字母大写)则返回True，否则返回False   |
+| str.isupper()                                | 如果str存在区分大小写的字符，并且都是大写则返回True 否则返回False |
+| str.ljust(width)                             | 返回一个原字符串左对齐的并使用空格填充至长度width的新字符串  |
+| str.lower()                                  | 转换str中所有大写字符为小写                                  |
+| str.lstrip()                                 | 去掉str左边的不可见字符                                      |
+| str.partition(s)                             | 用s将str切分成三个值                                         |
+| str.replace(a, b)                            | 将字符串str中的a替换成b                                      |
+| str.rfind(s)                                 | 类似于 find()函数，不过是从右边开始查找                      |
+| str.rindex(s)                                | 类似于 index()，不过是从右边开始                             |
+| str.rjust(width)                             | 返回一个原字符串右对齐的并使用空格填充至长度width的新字符串  |
+| str.rpartition(s)                            | 类似于 partition()函数,不过是从右边开始查找                  |
+| str.rstrip()                                 | 去掉str右边的不可见字符                                      |
+| str.split(s)                                 | 以s为分隔符切片str                                           |
+| str.splitlines()                             | 按照行分隔，返回一个包含各行作为元素的列表                   |
+| str.startswith(s)                            | 检查字符串str是否是以s开头，是则返回True，否则返回False      |
+| str.strip()                                  | 等于同时执行rstrip()和lstrip()                               |
+| str.title()                                  | 返回"标题化"的str,所有单词都是以大写开始，其余字母均为小写   |
+| str.upper()                                  | 返回str所有字符为大写的字符串                                |
+| str.zfill(width)                             | 返回长度为 width 的字符串，原字符串str右对齐，前面填充0      |
 
 # 34. difflib
+
+# [difflib模块详解 ](https://www.cnblogs.com/machangwei-8/p/15583728.html)
+
+## 1、两个字符串对比
+
+![img](https://images.cnblogs.com/OutliningIndicators/ExpandedBlockStart.gif)
+
+[![复制代码](https://assets.cnblogs.com/images/copycode.gif)](javascript:void(0);)
+
+```
+import difflib
+text1=""" test1 #定义字符串
+hellow
+my name is machanwei!
+difflib document v7.4
+add str
+"""
+text1_lines=text1.splitlines() #以行进行分隔，以便进行对比
+text2="""text2:   #定义字符串2
+hellow
+my name is machangwei!
+difflib document v7.5
+"""
+text2_lines=text2.splitlines()
+d=difflib.Differ()  #创建Differ()对象
+diff=d.compare(text1_lines,text2_lines)    #采用compare方法对字符串进行比较
+print('\n'.join(list(diff)))
+```
+
+[![复制代码](https://assets.cnblogs.com/images/copycode.gif)](javascript:void(0);)
+
+执行结果：
+
+![img](https://img2020.cnblogs.com/blog/1286512/202111/1286512-20211121104648106-255642880.png)
+
+ 
+
+ \- + 好像分别代表不同的文本，来区分文本用。这里-是1的，+是文本2的。？是有区别的地方，有区别的地方会标记箭头，只有-没有+，也就是不是成对出现应该是只有某一方有文本
+
+![img](https://img2020.cnblogs.com/blog/1286512/202111/1286512-20211121105540167-710991530.png)
+
+ ![img](https://img2020.cnblogs.com/blog/1286512/202111/1286512-20211121110230268-717721161.png)
+
+[回到顶部](https://www.cnblogs.com/machangwei-8/p/15583728.html#_labelTop)
+
+## 2、对比文件生成html文档
+
+执行生成html语句
+
+![img](https://img2020.cnblogs.com/blog/1286512/202111/1286512-20211121110637409-331419722.png)
+
+(venv) D:\python_mcw>python python自动化运维书\difflib模块学习.py >>..\diffres.html
+
+ ![img](https://img2020.cnblogs.com/blog/1286512/202111/1286512-20211121111735999-1060091968.png)
+
+ 
+
+ 挺好对比的
+
+![img](https://images.cnblogs.com/OutliningIndicators/ExpandedBlockStart.gif)
+
+[![复制代码](https://assets.cnblogs.com/images/copycode.gif)](javascript:void(0);)
+
+```
+import difflib
+text1=""" test1 #定义字符串
+hellow
+my name is machanwei!
+difflib document v7.4
+add str
+"""
+text1_lines=text1.splitlines() #以行进行分隔，以便进行对比
+text2="""text2:   #定义字符串2
+hellow
+my name is machangwei!
+difflib document v7.5
+"""
+text2_lines=text2.splitlines()
+
+# #将下面的
+# d=difflib.Differ()  #创建Differ()对象
+# diff=d.compare(text1_lines,text2_lines)    #采用compare方法对字符串进行比较
+# print('\n'.join(list(diff)))
+
+#替换成下面这些：
+d=difflib.HtmlDiff()
+print(d.make_file(text1_lines,text2_lines))
+```
+
+[![复制代码](https://assets.cnblogs.com/images/copycode.gif)](javascript:void(0);)
+
+![img](https://img2020.cnblogs.com/blog/1286512/202111/1286512-20211121111939239-530207107.png)
+
+[回到顶部](https://www.cnblogs.com/machangwei-8/p/15583728.html#_labelTop)
+
+## 3、对比文件差异
+
+![img](https://images.cnblogs.com/OutliningIndicators/ExpandedBlockStart.gif)
+
+[![复制代码](https://assets.cnblogs.com/images/copycode.gif)](javascript:void(0);)
+
+```
+[root@hecs-358404 ~]# cat mcw.py 
+# __*__ coding:utf-8 _*_
+#!/usr/bin/env python
+import difflib
+import sys
+
+try:
+    mcwfile1=sys.argv[1]  #第一个配置文件路径参数
+    mcwfile2=sys.argv[2] #第二个配置文件路径参数
+except Exception as e:
+    print("Error："+str(e))
+    print("Usage: mcw.py  mcwfile1 mcwfile2")
+    sys.exit()
+
+def readfile(filename): #文件读取分隔函数
+    try:
+        fileHandle=open(filename,'rb')
+        text=fileHandle.read().splitlines()   #读取后以行进行分隔
+        fileHandle.close()
+        return text
+    except IOError as error:
+        print('Read file Error:'+str(error))
+        sys.exit()
+if mcwfile1=="" or mcwfile2=="":
+    print("Usage: mcw.py  mcwfile1 mcwfile2")
+    sys.exit()
+text1_lines=readfile(mcwfile1) #调用函数，获取分隔后的字符串
+text2_lines=readfile(mcwfile2)
+d=difflib.HtmlDiff()
+print(d.make_file(text1_lines,text2_lines))
+```
+
+[![复制代码](https://assets.cnblogs.com/images/copycode.gif)](javascript:void(0);)
+
+![img](https://images.cnblogs.com/OutliningIndicators/ExpandedBlockStart.gif)
+
+[![复制代码](https://assets.cnblogs.com/images/copycode.gif)](javascript:void(0);)
+
+```
+server {
+
+       listen       80;
+
+       server_name  blog.etiantian.org;
+
+       location / {
+
+                root   html/blog;
+
+                index  index.html index.htm;
+
+          }
+
+        location ~* .*\.(php|php5)?$ {
+
+          root html/blog;
+
+              fastcgi_pass  127.0.0.1:9000;
+
+              fastcgi_index index.php;
+
+              include fastcgi.conf;
+
+          }
+
+}
+```
+
+[![复制代码](https://assets.cnblogs.com/images/copycode.gif)](javascript:void(0);)
+
+![img](https://images.cnblogs.com/OutliningIndicators/ExpandedBlockStart.gif)
+
+[![复制代码](https://assets.cnblogs.com/images/copycode.gif)](javascript:void(0);)
+
+```
+#server {
+
+       listen       80;
+
+            server_name  blog.etiantian.org;
+
+       location / {
+
+                root   html/blog;
+
+                index  index.html index.htm;
+
+          }
+
+        machangwei
+        location ~* .*\.(php|php5)?$ {
+
+          root html/blog;
+
+              fastcgi_pass  127.0.0.1:9000;
+
+              fastcgi_index index.php;
+
+              include fastcgi.conf;
+
+          }
+        fffffff
+}
+```
+
+[![复制代码](https://assets.cnblogs.com/images/copycode.gif)](javascript:void(0);)
+
+![img](https://img2020.cnblogs.com/blog/1286512/202111/1286512-20211121115108511-752117355.png)
+
+ 
+
+ 对比结果如下：
+
+![img](https://img2020.cnblogs.com/blog/1286512/202111/1286512-20211121115413650-572304161.png)
+
+ 
+
+ ![img](https://img2020.cnblogs.com/blog/1286512/202111/1286512-20211121120419412-1599113988.png)
+
+ 
 
 
 
 # 35. **textwrap**
 
+### extwrap
 
+在Python中，处理文本是一项常见且重要的任务。无论是生成报告、发送邮件还是处理用户输入，良好的文本格式都是确保信息清晰传达的关键。textwrap库是Python标准库中的一个模块，它提供了一系列功能强大的工具，帮助开发者轻松地对文本进行包装、缩进和填充。
+
+Python官方文档：[textwrap模块](https://cloud.tencent.com/developer/tools/blog-entry?target=https%3A%2F%2Fdocs.python.org%2F3%2Flibrary%2Ftextwrap.html&objectId=2520823&objectType=1&contentType=undefined)
+
+**直白一点来说就是：**
+
+`textwrap` 库可以帮你把长长的文字，分成几行，让它看起来更整齐，就像把长长的纸条折成几段一样。 它可以帮你控制每行的长度，也可以帮你把文字自动换行，避免一行文字太长。 简单来说，它就是个帮文字“排版”的小工具。
+
+#### 应用场景
+
+1. 格式化日志输出：    
+   - 在日志记录中，经常需要将日志条目格式化为特定宽度，以便于阅读和分析。textwrap库可以帮助将日志信息自动换行和填充，确保每行不超过指定的字符数。
+2. 生成报告：    
+   - 在生成文本报告时，可能需要将长文本缩短或包装以适应报告布局。textwrap库的fill和shorten函数可以派上用场，确保报告内容既美观又易于阅读。
+3. 用户界面文本显示：    
+   - 在[命令行工具](https://cloud.tencent.com/product/cli?from_column=20065&from=20065)或图形用户界面中，文本信息的显示需要符合一定的格式要求。textwrap库可以用于调整文本宽度、添加缩进等，以提高文本的可读性和美观性。
+4. 帮助信息和文档：    
+   - 编写命令行脚本时，提供美观的帮助信息对于用户体验至关重要。textwrap库可以帮助格式化帮助文本，使其更加清晰易读。
+   - 在文档编写中，textwrap库也可以用于调整段落宽度、添加缩进等，使文档内容更加整齐。
+5. 自动化脚本和CLI应用程序：    
+   - 在自动化脚本和CLI（命令行界面）应用程序中，textwrap库可以用于处理用户输入和输出文本，确保文本信息在终端中正确显示。
+6. 文本处理和转换：    
+   - 在文本处理和转换任务中，textwrap库可以用于去除文本中的不必要缩进、添加缩进或进行文本包装等预处理操作。
+7. 数据整理：    
+   - 从文件中读取的数据可能包含不一致的空白或缩进，textwrap库的dedent函数可以帮助去除这些不必要的空白，使数据更加整洁。
+8. 社交媒体和消息传递：    
+   - 在社交媒体或消息传递应用程序中，发送的文本信息可能需要符合特定的字符限制。textwrap库的shorten函数可以用于缩短文本并添加占位符，以符合这些限制。
+
+#### 基本功能：文本包装
+
+textwrap.fill()和textwrap.wrap()是textwrap库中最基础的两个函数，它们用于将长文本分割成指定宽度的多行文本。
+
+##### textwrap.fill(text, width, **kwargs)
+
+将文本text按width指定的宽度进行包装，并返回包装后的多行字符串。
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+import textwrap
+
+text = "Python的textwrap库是一个非常有用的文本处理工具，它可以帮助我们轻松地对长文本进行包装。"
+wrapped_text = textwrap.fill(text, 20)
+print(wrapped_text)
+```
+
+输出：
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+Python的textwrap库是一个非
+常有用的文本处理工具，它可以帮助我们轻松
+地对长文本进行包装。
+```
+
+##### textwrap.wrap(text, width, **kwargs)
+
+与fill()类似，但返回的是一个字符串列表，每个元素代表一行。
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+wrapped_lines = textwrap.wrap(text, 20)
+for line in wrapped_lines:
+    print(line)
+```
+
+输出与fill()相同，但每行作为独立的字符串输出。
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+Python的textwrap库是一个非
+常有用的文本处理工具，它可以帮助我们轻松
+地对长文本进行包装。
+```
+
+#### 高级功能：缩进与填充
+
+除了基本的文本包装，textwrap库还提供了对文本进行缩进和填充的功能。
+
+##### textwrap.indent(text, prefix)
+
+为文本text的每一行添加前缀prefix。
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+indented_text = textwrap.indent(wrapped_text, '    ')
+print(indented_text)
+```
+
+输出：
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+    Python的textwrap库是一个非常有用的文本处理工具，它可以帮助我们轻松地对长文本进行包装。
+```
+
+##### textwrap.dedent(text)
+
+去除文本text中所有行的共同缩进。
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+import textwrap
+txt = '   这是一个有缩进的文本。'
+dedented_text = textwrap.dedent(txt)
+print(dedented_text)
+```
+
+输出：
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+这是一个有缩进的文本。
+```
+
+##### 填充（Padding）
+
+虽然textwrap库没有直接提供填充函数，但可以通过组合其他函数实现类似效果。例如，使用str.ljust或str.rjust在文本前后添加空格。
+
+#### 自定义行为：初始缩进与后续缩进
+
+textwrap库允许用户自定义文本的首行缩进和后续行缩进。
+
+##### initial_indent和subsequent_indent
+
+这两个参数可以分别设置首行和后续行的缩进。
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+import textwrap
+text = "Python的textwrap库是一个非常有用的文本处理工具，它可以帮助我们轻松地对长文本进行包装。"
+custom_wrapped_text = textwrap.fill(text, 20, initial_indent='* ', subsequent_indent='  * ')
+print(custom_wrapped_text)
+```
+
+输出：
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+* Python的textwrap库是一
+  * 个非常有用的文本处理工具，它可以
+  * 帮助我们轻松地对长文本进行包装。
+```
+
+#### 处理空白字符
+
+textwrap库提供了一些参数来控制空白字符的处理，如expand_tabs、replace_whitespace和fix_sentence_endings。
+
+1. expand_tabs：将制表符（\t）转换为空格。
+2. replace_whitespace：将所有连续的空白字符替换为单个空格。
+3. fix_sentence_endings：尝试修复句子末尾的空格，以便更好地进行包装。
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+import textwrap
+text = "" \
+       "Python的textwrap库是一个非常有用的文本处理工具，   它可以帮助我们轻松地对长文本进行包装。    "
+fixed_text = textwrap.fill(text, 20, expand_tabs=True, replace_whitespace=True, fix_sentence_endings=True)
+print(fixed_text)
+```
+
+输出：
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+Python的textwrap库是一个非
+常有用的文本处理工具，
+它可以帮助我们轻松地对长文本进行包装。
+```
+
+#### textwrap库的主要函数及其参数
+
+| 函数名                                     | 描述                                       | 主要参数                                                     |
+| :----------------------------------------- | :----------------------------------------- | :----------------------------------------------------------- |
+| fill(text, width)                          | 按指定宽度包装文本并返回字符串             | text（待包装文本），width（每行宽度），initial_indent，subsequent_indent，expand_tabs，replace_whitespace，fix_sentence_endings，drop_whitespace，break_long_words，break_on_hyphens |
+| wrap(text, width)                          | 按指定宽度包装文本并返回字符串列表         | 同上                                                         |
+| indent(text, prefix)                       | 为文本每一行添加前缀                       | text（待缩进文本），prefix（前缀字符串）                     |
+| dedent(text)                               | 去除文本所有行的共同缩进                   | text（待去缩进文本）                                         |
+| shorten(text, width, placeholder=' [...]') | 缩短文本以适应指定宽度，并在末尾添加占位符 | text（待缩短文本），width（最大宽度），placeholder（占位符，默认为’ […]'） |
 
 # 36 . **heapq**
 
+**一、heapq库简介**
 
+heapq 库是Python标准库之一，提供了构建小顶堆的方法和一些对小顶堆的基本操作方法(如入堆，出堆等)，可以用于实现堆排序算法。
+
+堆是一种基本的数据结构，堆的结构是一棵完全二叉树，并且满足堆积的性质：每个节点(叶节点除外)的值都大于等于(或都小于等于)它的子节点。
+
+堆结构分为大顶堆和小顶堆，在heapq中使用的是小顶堆：
+
+1. 大顶堆：每个节点(叶节点除外)的值都大于等于其子节点的值，根节点的值是所有节点中最大的。
+2. 小顶堆：每个节点(叶节点除外)的值都小于等于其子节点的值，根节点的值是所有节点中最小的。
+
+在heapq库中，heapq使用的数据类型是Python的基本数据类型 list ，要满足堆积的性质，则在这个列表中，索引 k 的值要小于等于索引 2*k+1 的值和索引 2*k+2 的值(在完全二叉树中，将数据按广度优先插入，索引为k的节点的子节点索引分别为2*k+1和2*k+2)。在heapq库的源码中也有介绍，可以读一下heapq的源码，代码不多。
+
+使用Python实现堆排序可以参考：Python实现堆排序
+
+完全二叉树的特性可以参考：二叉树简介
+
+**二、使用heapq创建堆**
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+# coding=utf-8
+import heapq
+
+
+array = [10, 17, 50, 7, 30, 24, 27, 45, 15, 5, 36, 21]
+heap = []
+for num in array:
+    heapq.heappush(heap, num)
+print("array:", array)
+print("heap: ", heap)
+
+heapq.heapify(array)
+print("array:", array)
+```
+
+运行结果：
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+array: [10, 17, 50, 7, 30, 24, 27, 45, 15, 5, 36, 21]
+heap:  [5, 7, 21, 15, 10, 24, 27, 45, 17, 30, 36, 50]
+array: [5, 7, 21, 10, 17, 24, 27, 45, 15, 30, 36, 50]
+```
+
+heapq中创建堆的方法有两种。
+
+heappush(heap, num)，先创建一个空堆，然后将数据一个一个地添加到堆中。每添加一个数据后，heap都满足小顶堆的特性。
+
+heapify(array)，直接将数据列表调整成一个小顶堆(调整的原理参考上面堆排序的文章，heapq库已经实现了)。
+
+两种方法实现的结果会有差异，如上面的代码中，使用heappush(heap, num)得到的堆结构如下。
+
+![img](https://ask.qcloudimg.com/http-save/yehe-8302741/bkxechx923.png)
+
+使用heapify(array)得到的堆结构如下。
+
+![img](https://ask.qcloudimg.com/http-save/yehe-8302741/wzyzfztnyj.png)
+
+不过，这两个结果都满足小顶堆的特性，不影响堆的使用(堆只会从堆顶开始取数据，取出数据后会重新调整结构)。
+
+**三、使用heapq实现堆排序**
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+array = [10, 17, 50, 7, 30, 24, 27, 45, 15, 5, 36, 21]
+heap = []
+for num in array:
+    heapq.heappush(heap, num)
+print(heap[0])
+# print(heapq.heappop(heap))
+heap_sort = [heapq.heappop(heap) for _ in range(len(heap))]
+print("heap sort result: ", heap_sort)
+```
+
+运行结果：
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+5
+heap sort result:  [5, 7, 10, 15, 17, 21, 24, 27, 30, 36, 45, 50]
+```
+
+先将待排序列表中的数据添加到堆中，构造一个小顶堆，打印第一个数据，可以确认它是最小值。然后依次将堆顶的值取出，添加到一个新的列表中，直到堆中的数据取完，新列表就是排序后的列表。
+
+heappop(heap)，将堆顶的数据出堆，并将堆中剩余的数据构造成新的小顶堆。
+
+**四、获取堆中的最小值或最大值**
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+array = [10, 17, 50, 7, 30, 24, 27, 45, 15, 5, 36, 21]
+heapq.heapify(array)
+print(heapq.nlargest(2, array))
+print(heapq.nsmallest(3, array))
+```
+
+运行结果：
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+[50, 45]
+[5, 7, 10]
+```
+
+nlargest(num, heap)，从堆中取出num个数据，从最大的数据开始取，返回结果是一个列表(即使只取一个数据)。如果num大于等于堆中的数据数量，则从大到小取出堆中的所有数据，不会报错，相当于实现了降序排序。
+
+nsmallest(num, heap)，从堆中取出num个数据，从最小的数据开始取，返回结果是一个列表。
+
+这两个方法除了可以用于堆，也可以直接用于列表，功能一样。
+
+**五、使用heapq合并两个有序列表**
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+array_a = [10, 7, 15, 8]
+array_b = [17, 3, 8, 20, 13]
+array_merge = heapq.merge(sorted(array_a), sorted(array_b))
+print("merge result:", list(array_merge))
+```
+
+运行结果：
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+merge result: [3, 7, 8, 8, 10, 13, 15, 17, 20]
+```
+
+merge(list1, list2)，将两个有序的列表合并成一个新的有序列表，返回结果是一个迭代器。这个方法可以用于归并排序。
+
+**六、heapq替换数据的方法**
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+array_c = [10, 7, 15, 8]
+heapq.heapify(array_c)
+print("before:", array_c)
+# 先push再pop
+item = heapq.heappushpop(array_c, 5)
+print("after: ", array_c)
+print(item)
+
+array_d = [10, 7, 15, 8]
+heapq.heapify(array_d)
+print("before:", array_d)
+# 先pop再push
+item = heapq.heapreplace(array_d, 5)
+print("after: ", array_d)
+print(item)
+```
+
+运行结果：
+
+代码语言：javascript
+
+AI代码解释
+
+
+
+```javascript
+before: [7, 8, 15, 10]
+after:  [7, 8, 15, 10]
+5
+before: [7, 8, 15, 10]
+after:  [5, 8, 15, 10]
+7
+```
+
+heappushpop(heap, num)，先将num添加到堆中，然后将堆顶的数据出堆。
+
+heapreplace(heap, num)，先将堆顶的数据出堆，然后将num添加到堆中。
+
+两个方法都是即入堆又出堆，只是顺序不一样，可以用于替换堆中的数据。具体的区别可以看代码中的例子
 
 # 37. **bisect**
 

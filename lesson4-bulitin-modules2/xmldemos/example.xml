@@ -1,0 +1,9 @@
+<root>
+    <element1 attribute="value1">
+        <subelement1>Text inside subelement1</subelement1>
+        <subelement2 attribute2="value2">Text inside subelement2</subelement2>
+    </element1>
+    <element2>
+        <subelement3>Text inside subelement3</subelement3>
+    </element2>
+</root>
