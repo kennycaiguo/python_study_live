@@ -5525,45 +5525,1642 @@ python http模块到此已经分析结束；不知道大家有没发现，python
 
 # 43. **smtplib**
 
+### 例子
+
+```
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+# 1. 邮件服务器配置
+host = 'smtp.example.com'
+port = 465 # SSL端口
+user = 'your_email@example.com'
+password = 'your_authorization_code' # 应用授权码
+
+# 2. 构建邮件内容
+msg = MIMEMultipart()
+msg['From'] = user
+msg['To'] = 'recipient@example.com'
+msg['Subject'] = 'Python 自动化测试邮件'
+msg.attach(MIMEText('<h1>这是一封邮件测试</h1>', 'html', 'utf-8'))
+
+# 3. 发送邮件
+try:
+    # 使用SSL加密连接
+    server = smtplib.SMTP_SSL(host, port)
+    server.login(user, password)
+    server.sendmail(user, ['recipient@example.com'], msg.as_string())
+    server.quit()
+    print("邮件发送成功")
+except Exception as e:
+    print(f"发送失败: {e}")
+```
+
 
 
 # 44 . **traceback**
 
+#### 参考文档：https://www.geeksforgeeks.org/python/traceback-in-python/
 
+#### 参考文档2：https://zhuanlan.zhihu.com/p/614825330
 
 # 45. **unittest**
+
+## 需要和一个第三方模块HTMLTestRunner： pip install html-testRunner
+
+### 例子1
+
+```
+"""
+python uinttest built-in module
+"""
+
+import unittest
+
+class MyTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        print("UnitTest Begin...")
+
+    @classmethod
+    def tearDownClass(self):
+       print("UnitTest End...")
+
+    def setUp(self):
+        print("Begin...")  
+
+    def tearDown(self):
+       print("End...")
+
+    def test_1(self):
+        self.assertEqual(1,1)
+    def test_2(self):
+        self.assertEqual(1,2)   
+    
+if __name__ == '__main__':
+    unittest.main()    # you don't have to deal with the class yourself,just call unittest.main()
+
+
+```
+
+#### 运行效果
+
+```
+"""
+UnitTest Begin...
+Begin...
+End...
+.Begin...
+FEnd...
+UnitTest End...
+
+======================================================================
+FAIL: test_2 (__main__.MyTest.test_2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\pc_programming_live\python_study_live\lesson4-bulitin-modules2\unitestdemo.py", line 25, in test_2
+    self.assertEqual(1,2)
+AssertionError: 1 != 2
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.002s
+
+FAILED (failures=1)
+"""    
+```
+
+### 例子2
+
+```
+"""
+python uinttest built-in module
+"""
+
+import unittest
+
+class MyTest(unittest.TestCase):
+    
+    def setUp(self):
+        print("Begin...")  
+        number = input("please enter a number: ")
+        self.number = int(number)
+    def test_1(self):
+        print(self.number)
+        self.assertEqual(self.number,10,msg='The number needed is 10')
+
+    def test_2(self):
+        print(self.number)
+        self.assertEqual(self.number,20,msg='The number needed is 20') 
+
+    def tearDown(self):
+       print("End...")
+
+    
+    
+if __name__ == '__main__':
+    unittest.main()    # you don't have to deal with the class yourself,just call unittest.main()
+
+
+```
+
+#### 运行效果
+
+```
+'''
+Begin...
+please enter a number: 10
+10
+End...
+.Begin...
+please enter a number: 20
+20
+End...
+.
+----------------------------------------------------------------------
+Ran 2 tests in 4.423s
+
+OK
+
+''' 
+```
+
+### 例子3，有2个文件
+
+![image-20260507122542960](./built-in-modules2.assets/image-20260507122542960.png)
+
+#### calculator.py
+
+```
+class Calculator:
+    def add(self,a,b):
+        return a + b
+    def sub(self,a,b):
+        return a - b
+    def mul(self,a,b):
+        return a * b
+    def div(self,a,b):
+        if b <= 0:
+            print("除数必须大于0")
+            return None
+        return a / b
+    
+```
+
+#### unittestdemo3.py
+
+```
+import unittest
+from calculator import Calculator
+
+class TestCalculator(unittest.TestCase):
+    def testAdd(self): 
+        cal = Calculator()
+        result = cal.add(10,2)
+        self.assertEqual(result,12)
+    def testSub(self):
+        cal = Calculator()
+        result = cal.sub(10,2)
+        self.assertEqual(result,8)
+    def testMul(self):
+        cal = Calculator()
+        result = cal.mul(10,2)
+        self.assertEqual(result,20)
+    def testDivide(self):
+        cal = Calculator()
+        result = cal.div(10,2)
+        self.assertEqual(result,5)
+
+if __name__ == '__main__':
+    unittest.main()
+
+```
+
+#### 效果
+
+```
+....
+----------------------------------------------------------------------
+Ran 4 tests in 0.001s
+
+OK
+```
+
+### 例子4，有5个文件
+
+#### register.py
+
+```
+# register.py
+users = [{'username': 'test', 'password': '123456'}]
+
+
+def register(username, password1, password2):
+
+    if not all([username, password1, password2]):
+        return {"code": 0, "msg": "所有参数不能为空"}
+    # 注册功能
+    for user in users:
+        if username == user['username']:
+            return {"code": 0, "msg": "该用户名已存在！"}
+    else:
+        if password1 != password2:
+            return {"code": 0, "msg": "两次密码输入不一致！"}
+        else:
+            if 6 <= len(username) <= 18 and 6 <= len(password1) <= 18:
+                users.append({'username': username, 'password': password2})
+                return {"code": 1, "msg": "注册成功"}
+            else:
+                return {"code": 0, "msg": "用户名和密码必须在6-18位之间"}
+```
+
+#### unittestdemo4.1.py
+
+```
+# test_register.py
+import unittest
+from register import register   # 导入被测试的代码
+
+
+class TestRegister(unittest.TestCase):
+    """注册接口测试用例类"""
+
+    def test_register_success(self):
+        """注册成功"""
+        data = ("mikitest", "miki123", "miki123")   # 测试数据
+        expected = {"code": 1, "msg": "注册成功"}   # 预期结果
+        result = register(*data)    # 把测试数据传到被测的代码，接收实际结果
+        self.assertEqual(expected, result)  # 断言，预期和实际是否一致，一致即用例通过
+
+    def test_username_isnull(self):
+        """注册失败-用户名为空"""
+        data = ("", "miki123", "miki123")
+        expected = {"code": 0, "msg": "所有参数不能为空"}
+        result = register(*data)
+        self.assertEqual(expected, result)
+
+    def test_username_lt6(self):
+        """注册失败-用户名大于18位"""
+        data = ("mikitestmikitestmikitest", "miki123", "miki123")
+        expected = {"code": 0, "msg": "用户名和密码必须在6-18位之间！"}
+        result = register(*data)
+        self.assertEqual(expected, result)	# 这条用例应该是不通过的，注册代码bug
+
+    def test_pwd1_not_pwd2(self):
+        """注册失败-两次密码不一致"""
+        data = ("miki123", "test123", "test321")
+        expected = {"code": 0, "msg": "两次密码输入不一致！"}
+        result = register(*data)
+        self.assertEqual(expected, result)
+
+
+# 如果直接运行这个文件，需要使用unittest中的main函数来执行测试用例
+if __name__ == '__main__':
+    unittest.main()
+```
+
+#### 运行效果
+
+```
+...F
+======================================================================
+FAIL: test_username_lt6 (__main__.TestRegister.test_username_lt6)
+注册失败-用户名大于18位
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\pc_programming_live\python_study_live\lesson4-bulitin-modules2\unittestdemos\unittestdemo4\unittestdemo4.1.py", line 28, in test_username_lt6
+    self.assertEqual(expected, result)  # 这条用例应该是不通过的，注册代码bug
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'code': 0, 'msg': '用户名和密码必须在6-18位之间！'} != {'code': 0, 'msg': '用户名和密码必须在6-18位之间'}
+- {'code': 0, 'msg': '用户名和密码必须在6-18位之间！'}
+?                                     -
+
++ {'code': 0, 'msg': '用户名和密码必须在6-18位之间'}
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.003s
+
+FAILED (failures=1)
+```
+
+#### test_register.py
+
+```
+# test_register.py
+import unittest
+from register import register   # 导入被测试的代码
+
+
+class TestRegister(unittest.TestCase):
+    """注册接口测试用例类"""
+    
+    def setUp(self):
+        # 每条用例执行之前都会执行
+        print("用例{}开始执行--".format(self))
+
+    def tearDown(self):
+        # 每条用例执行之后都会执行
+        print("用例{}执行结束--".format(self))
+
+    @classmethod	# 指明这是个类方法以类为维度去执行的
+    def setUpClass(cls):
+        # 整个测试用例类中的用例执行之前，会先执行此方法
+        print("-----setup---class-----")
+
+    @classmethod
+    def tearDownClass(cls):
+        # 整个测试用例类中的用例执行完之后，会执行此方法
+        print("-----teardown---class-----")
+
+    def test_register_success(self):
+        """注册成功"""
+        data = ("mikitest", "miki123", "miki123")   # 测试数据
+        expected = {"code": 1, "msg": "注册成功"}   # 预期结果
+        result = register(*data)    # 把测试数据传到被测的代码，接收实际结果
+        self.assertEqual(expected, result)  # 断言，预期和实际是否一致，一致即用例通过
+
+    def test_username_isnull(self):
+        """注册失败-用户名为空"""
+        data = ("", "miki123", "miki123")
+        expected = {"code": 0, "msg": "所有参数不能为空"}
+        result = register(*data)
+        self.assertEqual(expected, result)
+
+
+# 如果直接运行这个文件，需要使用unittest中的main函数来执行测试用例
+if __name__ == '__main__':
+    unittest.main()
+```
+
+#### 运行效果
+
+```
+-----setup---class-----
+用例test_register_success (__main__.TestRegister.test_register_success)开始执行--
+用例test_register_success (__main__.TestRegister.test_register_success)执行结束--
+.用例test_username_isnull (__main__.TestRegister.test_username_isnull)开始执行--
+用例test_username_isnull (__main__.TestRegister.test_username_isnull)执行结束--
+.-----teardown---class-----
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.000s
+
+OK
+```
+
+#### run_unittest.py
+
+```
+# run_test.py，与test_register.py、register.py同一目录下
+""" pip install html-testRunner"""
+import unittest
+import test_register
+from HtmlTestRunner import HTMLTestRunner
+
+# 创建测试套件
+suite = unittest.TestSuite()
+
+# 通过模块加载测试用例
+loader = unittest.TestLoader()
+suite.addTest(loader.loadTestsFromModule(test_register))
+
+# 创建测试运行程序启动器
+runner = HTMLTestRunner()                 
+
+# 使用启动器去执行测试套件里的用例
+runner.run(suite)
+
+
+```
+
+#### 参考网址：https://www.cnblogs.com/miki-peng/p/12501341.html
+
+selenium系列：https://www.cnblogs.com/miki-peng/category/1942527.html
+
+接口自动化系列：https://www.cnblogs.com/miki-peng/category/1671261.html
+
+python基础：https://www.cnblogs.com/miki-peng/category/1636367.html
 
 
 
 # 46. **timeit**
 
+### 参考网址：https://zhuanlan.zhihu.com/p/634865798
 
+### 参考网址2：https://www.cnblogs.com/hale547/p/13385142.html
+
+### 参考网址3： https://cloud.tencent.com/developer/article/2569997
 
 # 47. fileinput
 
+## Python 的 `fileinput` 模块是内置模块，用于快速遍历一个或多个文本文件，并支持高效的逐行处理（类似 `readlines()` 但内存占用极低）。它最强大的特性包括：统一处理多个文件、处理标准输入（stdin）、以及在文件内进行原位（inplace）修改和备份
 
+### 参考网址1： https://juejin.cn/post/6992771711800180749
+
+### 参考网址2：https://www.cnblogs.com/liuzhongkun/p/16528548.html
+
+fileinput 是 Python 的内置模块，但我相信，不少人对它都是陌生的。今天我把 fileinput 的所有的用法、功能进行详细的讲解，并列举了一些非常实用的案例，对于理解和使用它可以说完全没有问题。
+
+## 1. 从标准输入中读取
+
+当你的 Python 脚本没有传入任何参数时，fileinput 默认会以 stdin 作为输入源
+
+```python
+# demo.py
+import fileinput
+
+for line in fileinput.input():
+    print(line) 
+```
+
+效果如下，不管你输入什么，程序会自动读取并再打印一次，像个复读机似的。
+
+```shell
+$ python demo.py 
+hello
+hello
+
+python
+python
+```
+
+## 2. 单独打开一个文件
+
+脚本的内容如下
+
+```python
+import fileinput
+
+with fileinput.input(files=('a.txt',)) as file:
+    for line in file:
+        print(f'{fileinput.filename()} 第{fileinput.lineno()}行: {line}', end='') 
+```
+
+其中 `a.txt` 的内容如下
+
+```
+hello
+world
+```
+
+执行后就会输出如下
+
+```shell
+$ python demo.py
+a.txt 第1行: hello
+a.txt 第2行: world
+```
+
+需要说明的一点是，`fileinput.input()` 默认使用 `mode='r'` 的模式读取文件，如果你的文件是二进制的，可以使用`mode='rb'` 模式。fileinput 有且仅有这两种读取模式。
+
+## 3. 批量打开多个文件
+
+从上面的例子也可以看到，我在 `fileinput.input` 函数中传入了 `files` 参数，它接收一个包含多个文件名的列表或元组，传入一个就是读取一个文件，传入多件就是读取多个文件。
+
+```python
+import fileinput
+
+with fileinput.input(files=('a.txt', 'b.txt')) as file:
+    for line in file:
+        print(f'{fileinput.filename()} 第{fileinput.lineno()}行: {line}', end='') 
+```
+
+`a.txt` 和 `b.txt` 的内容分别是
+
+```shell
+$ cat a.txt
+hello
+world
+$ cat b.txt
+hello
+python
+```
+
+运行后输出结果如下，由于 `a.txt` 和 `b.txt` 的内容被整合成一个文件对象 `file` ，因此 `fileinput.lineno()` 只有在读取一个文件时，才是原文件中真实的行号。
+
+```shell
+$ python demo.py
+a.txt 第1行: hello
+a.txt 第2行: world
+b.txt 第3行: hello
+b.txt 第4行: python
+```
+
+如果想要在读取多个文件的时候，也能读取原文件的真实行号，可以使用 `fileinput.filelineno()` 方法
+
+```python
+import fileinput
+
+with fileinput.input(files=('a.txt', 'b.txt')) as file:
+    for line in file:
+        print(f'{fileinput.filename()} 第{fileinput.filelineno()}行: {line}', end='') 
+```
+
+运行后，输出如下
+
+```shell
+$ python demo.py
+a.txt 第1行: hello
+a.txt 第2行: world
+b.txt 第1行: hello
+b.txt 第2行: python
+```
+
+这个用法和 glob 模块简直是绝配
+
+```python
+import fileinput
+import glob
+ 
+for line in fileinput.input(glob.glob("*.txt")):
+    if fileinput.isfirstline():
+        print('-'*20, f'Reading {fileinput.filename()}...', '-'*20)
+    print(str(fileinput.lineno()) + ': ' + line.upper(), end="")
+```
+
+运行效果如下
+
+```python
+$ python demo.py
+-------------------- Reading b.txt... --------------------
+1: HELLO
+2: PYTHON
+-------------------- Reading a.txt... --------------------
+3: HELLO
+4: WORLD
+```
+
+## 4. 读取的同时备份文件
+
+```
+fileinput.input` 有一个 backup 参数，你可以指定备份的后缀名，比如 `.bak
+import fileinput
+
+
+with fileinput.input(files=("a.txt",), backup=".bak") as file:
+    for line in file:
+        print(f'{fileinput.filename()} 第{fileinput.lineno()}行: {line}', end='') 
+```
+
+运行的结果如下，会多出一个 `a.txt.bak` 文件
+
+```shell
+$ ls -l a.txt*
+-rw-r--r--  1 MING  staff  12  2 27 10:43 a.txt
+
+$ python demo.py
+a.txt 第1行: hello
+a.txt 第2行: world
+
+$ ls -l a.txt*
+-rw-r--r--  1 MING  staff  12  2 27 10:43 a.txt
+-rw-r--r--  1 MING  staff  42  2 27 10:39 a.txt.bak
+```
+
+## 5. 标准输出重定向替换
+
+`fileinput.input` 有一个 inplace 参数，表示是否将标准输出的结果写回文件，默认不取代
+
+请看如下一段测试代码
+
+```python
+import fileinput
+
+with fileinput.input(files=("a.txt",), inplace=True) as file:
+    print("[INFO] task is started...") 
+    for line in file:
+        print(f'{fileinput.filename()} 第{fileinput.lineno()}行: {line}', end='') 
+    print("[INFO] task is closed...") 
+```
+
+运行后，会发现在 for 循环体内的 print 内容会写回到原文件中了。而在 for 循环体外的 print 则没有变化。
+
+```shell
+$ cat a.txt
+hello
+world
+
+$ python demo.py
+[INFO] task is started...
+[INFO] task is closed...
+
+$ cat a.txt 
+a.txt 第1行: hello
+a.txt 第2行: world
+```
+
+利用这个机制，可以很容易的实现文本替换。
+
+```python
+import sys
+import fileinput
+
+for line in fileinput.input(files=('a.txt', ), inplace=True):
+    #将Windows/DOS格式下的文本文件转为Linux的文件
+    if line[-2:] == "\r\n":  
+        line = line + "\n"
+    sys.stdout.write(line)
+```
+
+附：如何实现 DOS 和 UNIX 格式互换以供程序测试，使用 vim 输入如下指令即可
+
+```
+DOS转UNIX：:setfileformat=unix
+UNIX转DOS：:setfileformat=dos
+```
+
+## 6. 不得不介绍的方法
+
+如果只是想要 `fileinput` 当做是替代 open 读取文件的工具，那么以上的内容足以满足你的要求。
+
+- `fileinput.filenam()` 返回当前被读取的文件名。 在第一行被读取之前，返回 `None`。
+- `fileinput.fileno()` 返回以整数表示的当前文件“文件描述符”。 当未打开文件时（处在第一行和文件之间），返回 `-1`。
+- `fileinput.lineno()` 返回已被读取的累计行号。 在第一行被读取之前，返回 `0`。 在最后一个文件的最后一行被读取之后，返回该行的行号。
+- `fileinput.filelineno()` 返回当前文件中的行号。 在第一行被读取之前，返回 `0`。 在最后一个文件的最后一行被读取之后，返回此文件中该行的行号。
+
+但若要想基于 fileinput 来做一些更加复杂的逻辑，也许你会需要用到如下这几个方法
+
+- `fileinput.isfirstline()` 如果刚读取的行是其所在文件的第一行则返回 `True`，否则返回 `False`。
+- `fileinput.isstdin()` 如果最后读取的行来自 `sys.stdin` 则返回 `True`，否则返回 `False`。
+- `fileinput.nextfile()` 关闭当前文件以使下次迭代将从下一个文件（如果存在）读取第一行；不是从该文件读取的行将不会被计入累计行数。 直到下一个文件的第一行被读取之后文件名才会改变。 在第一行被读取之前，此函数将不会生效；它不能被用来跳过第一个文件。 在最后一个文件的最后一行被读取之后，此函数将不再生效。
+- `fileinput.close()` 关闭序列。
+
+## 7. 进阶一点的玩法
+
+在 `fileinput.input()` 中有一个 `openhook` 的参数，它支持用户传入自定义的对象读取方法。
+
+若你没有传入任何的勾子，fileinput 默认使用的是 open 函数。
+
+![img](http://image.iswbm.com/image-20210227095708676.png)
+
+`fileinput` 为我们内置了两种勾子供你使用
+
+1. `fileinput.hook_compressed(*filename*, *mode*)`
+
+   使用 `gzip` 和 `bz2` 模块透明地打开 gzip 和 bzip2 压缩的文件（通过扩展名 `'.gz'` 和 `'.bz2'` 来识别）。 如果文件扩展名不是 `'.gz'` 或 `'.bz2'`，文件会以正常方式打开（即使用 [`open()`](https://iswbm.com/zh/) 并且不带任何解压操作）。使用示例: `fi = fileinput.FileInput(openhook=fileinput.hook_compressed)`
+
+2. `fileinput.hook_encoded(*encoding*, *errors=None*)`
+
+返回一个通过 `open()` 打开每个文件的钩子，使用给定的 *encoding* 和 *errors* 来读取文件。使用示例: `fi = fileinput.FileInput(openhook=fileinput.hook_encoded("utf-8", "surrogateescape"))`
+
+如果你自己的场景比较特殊，以上的三种勾子都不能满足你的要求，你也可以自定义。
+
+这边我举个例子来抛砖引玉下
+
+假如我想要使用 fileinput 来读取网络上的文件，可以这样定义勾子。
+
+1. 先使用 requests 下载文件到本地
+2. 再使用 open 去读取它
+
+```python
+def online_open(url, mode):
+    import requests
+    r = requests.get(url) 
+    filename = url.split("/")[-1]
+    with open(filename,'w') as f1:
+        f1.write(r.content.decode("utf-8"))
+    f2 = open(filename,'r')
+    return f2
+```
+
+直接将这个函数传给 openhoos 即可
+
+```python
+import fileinput
+
+file_url = 'https://www.csdn.net/robots.txt'
+with fileinput.input(files=(file_url,), openhook=online_open) as file:
+    for line in file:
+        print(line, end="")
+```
+
+运行后按预期一样将 CSDN 的 robots 的文件打印了出来
+
+```
+User-agent: * 
+Disallow: /scripts 
+Disallow: /public 
+Disallow: /css/ 
+Disallow: /images/ 
+Disallow: /content/ 
+Disallow: /ui/ 
+Disallow: /js/ 
+Disallow: /scripts/ 
+Disallow: /article_preview.html* 
+Disallow: /tag/
+Disallow: /*?*
+Disallow: /link/
+
+Sitemap: https://www.csdn.net/sitemap-aggpage-index.xml
+Sitemap: https://www.csdn.net/article/sitemap.txt 
+```
+
+## 8. 列举一些实用案例
+
+案例一：读取一个文件所有行
+
+```python
+import fileinput
+for line in fileinput.input('data.txt'):
+  print(line, end="")
+```
+
+案例二：读取多个文件所有行
+
+```python
+import fileinput
+import glob
+ 
+for line in fileinput.input(glob.glob("*.txt")):
+    if fileinput.isfirstline():
+        print('-'*20, f'Reading {fileinput.filename()}...', '-'*20)
+    print(str(fileinput.lineno()) + ': ' + line.upper(), end="")
+```
+
+案例三：利用fileinput将CRLF文件转为LF
+
+```python
+import sys
+import fileinput
+
+for line in fileinput.input(files=('a.txt', ), inplace=True):
+    #将Windows/DOS格式下的文本文件转为Linux的文件
+    if line[-2:] == "\r\n":  
+        line = line + "\n"
+    sys.stdout.write(line)
+```
+
+案例四：配合 re 做日志分析：取所有含日期的行
+
+```python
+#--样本文件--：error.log
+aaa
+1970-01-01 13:45:30  Error: **** Due to System Disk spacke not enough...
+bbb
+1970-01-02 10:20:30  Error: **** Due to System Out of Memory...
+ccc
+ 
+#---测试脚本---
+import re
+import fileinput
+import sys
+ 
+pattern = '\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}'
+ 
+for line in fileinput.input('error.log',backup='.bak',inplace=1):
+    if re.search(pattern,line):
+        sys.stdout.write("=> ")
+        sys.stdout.write(line)
+ 
+#---测试结果---
+=> 1970-01-01 13:45:30  Error: **** Due to System Disk spacke not enough...
+=> 1970-01-02 10:20:30  Error: **** Due to System Out of Memory...
+```
+
+案例五：利用fileinput实现类似于grep的功能
+
+```python
+import sys
+import re
+import fileinput
+ 
+pattern= re.compile(sys.argv[1])
+for line in fileinput.input(sys.argv[2]):
+    if pattern.match(line):
+        print(fileinput.filename(), fileinput.filelineno(), line)
+$ ./test.py import.*re *.py
+#查找所有py文件中，含import re字样的
+addressBook.py  2   import re
+addressBook1.py 10  import re
+addressBook2.py 18  import re
+test.py         238 import re
+```
+
+## 9. 写在最后
+
+##### fileinput 是对 open 函数的再次封装，在仅需读取数据的场景中， fileinput 显然比 open 做得更专业、更人性，当然在其他有写操作的复杂场景中，fileinput 就无能为力啦，本身从 fileinput 的命名上就知道这个模块只专注于输入（读）而不是输出（写）
 
 # 48 . array
+
+Python 的 `array` 模块提供了一种高效的、内存紧凑的数据结构，专门用于存储**相同基本类型**（如整数、浮点数、字符）的元素序列。与列表 (`list`) 不同，`array` 在内存中是连续存储的，且类型受限，因此对于大量相同类型数值数据的处理，它比列表更节省内存、运行速度更快。 [[1](https://blog.csdn.net/m0_67162074/article/details/129659786), [2](https://cloud.tencent.com/developer/article/1569877), [3](https://developer.aliyun.com/article/1489885)]
+
+1. 核心特点
+
+- **同质数据**：所有元素必须是相同类型。
+- **内存高效**：直接存储数据值，而非对象的引用。
+- **序列类型**：行为与 `list` 相似，支持切片、索引、迭代。
+- **非 NumPy**：`array` 模块是 Python 内置标准库，只支持一维数组，不需安装，与科学计算的 NumPy 数组 (`numpy.array`) 不同。 [[1](https://www.oldboyedu.com/blog/6094.html), [2](https://cloud.tencent.com/developer/article/2314893), [3](https://www.py.cn/jishu/jichu/23637.html), [4](https://comate.baidu.com/zh/page/10c99h6h0ow), [5](https://blog.csdn.net/m0_67162074/article/details/129659786), [6](https://cloud.tencent.com/developer/article/1569877)]
+- **array 模块导入与创建**
+
+使用前需导入：`import array`
+
+python
+
+```
+import array
+
+# 创建一个整数类型的数组 (类型码 'i', 初始数据 [1, 2, 3])
+my_array = array.array('i', [1, 2, 3, 4, 5])
+print(my_array) # 输出: array('i', [1, 2, 3, 4, 5])
+```
+
+3. **核心参数：类型码 (Type Codes)**
+
+创建数组时，必须指定类型码，以确定每个元素的内存大小： [[1](https://docs.python.org/zh-cn/3.8/library/array.html)]
+
+| 类型码 | C 类型         | Python 类型  | 最小字节数 |
+| ------ | -------------- | ------------ | ---------- |
+| `'b'`  | signed char    | int          | 1          |
+| `'B'`  | unsigned char  | int          | 1          |
+| `'u'`  | Py_UNICODE     | Unicode char | 2          |
+| `'h'`  | signed short   | int          | 2          |
+| `'H'`  | unsigned short | int          | 2          |
+| `'i'`  | signed int     | int          | 2          |
+| `'I'`  | unsigned int   | int          | 2          |
+| `'l'`  | signed long    | int          | 4          |
+| `'L'`  | unsigned long  | int          | 4          |
+| `'f'`  | float          | float        | 4          |
+| `'d'`  | double         | float        | 8          |
+
+4. **常用操作方法**
+
+数组操作与列表类似，支持增删改查： [[1](https://zhuanlan.zhihu.com/p/602126404), [2](https://blog.csdn.net/weixin_42287030/article/details/111989284)]
+
+- **添加元素**：`append()`, `extend()`, `insert()`
+
+- **删除元素**：`pop()`, `remove()`
+
+- **查找**：`index()`, `count()`
+
+- **其他**：`reverse()`, `itemsize`（返回元素字节大小）
+
+- ### [机器值](https://zhida.zhihu.com/search?content_id=164057053&content_type=Article&match_order=1&q=机器值&zd_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ6aGlkYV9zZXJ2ZXIiLCJleHAiOjE3NzgzNTg1MDMsInEiOiLmnLrlmajlgLwiLCJ6aGlkYV9zb3VyY2UiOiJlbnRpdHkiLCJjb250ZW50X2lkIjoxNjQwNTcwNTMsImNvbnRlbnRfdHlwZSI6IkFydGljbGUiLCJtYXRjaF9vcmRlciI6MSwiemRfdG9rZW4iOm51bGx9.0Q5uGrp88hRp-qpAqGxjT_r7uAHXRyuj17aRbBIc2yA&zhida_source=entity)、文件相关
+
+  - **`array.frombytes(s)`**
+
+  将二进制字符串解读后加入数组末尾。
+
+  - **`array.fromfile(f, n)`**
+
+  将从文件对象 `f` 中读取 `n` 个元素添加到数组末尾。如果可读数据少于参数 `n`，那么将报 `EOFError` 错误，但是有效的元素仍然会添加到数组中。参数 `f` 必须是内置文件对象。
+
+  - **`array.tobytes()`**
+
+  将数组转换成机器值并返回。
+
+  - **`array.tofile(f)`**
+
+  将数组转换成机器值并写入到文件中。参数 `f` 必须是内置文件对象。
+
+  - **`array.byteswap()`**
+
+  将数组中的所有元素字节对调，此方法仅支持大小为 `1`、`2`、`4`、`8` 字节的值，其他的值将报 `RuntimeError`错误。
+
+python
+
+```
+import array
+
+# 创建浮点数数组
+a = array.array('d', [1.0, 2.5, 3.8])
+
+# 1. 增
+a.append(4.2)
+a.extend([5.1, 6.0])
+
+# 2. 删
+a.pop()        # 删除最后一个
+a.remove(2.5)  # 删除特定值
+
+# 3. 改/查
+a[0] = 10.0
+print(a[0])    # 索引
+print(a[1:3])  # 切片
+
+# 4. 获取元素字节大小
+print(a.itemsize) # 8 (double)
+```
+
+请谨慎使用此类代码。
+
+5. **Array 与 List、NumPy 的区别**
+
+- **List**: 元素类型可不同，内存占用大，灵活度高。
+- **Array (`array.array`)**: 同质类型，内存占用小，适用于低级内存操作。
+- **NumPy (`numpy.array`)**: 支持多维数组，高性能科学计算，数组操作极快，远超标准 `array` 模块。 [[1](https://blog.csdn.net/m0_67162074/article/details/129659786), [2](https://www.py.cn/jishu/jichu/23637.html), [3](https://comate.baidu.com/zh/page/10c99h6h0ow), [4](https://blog.csdn.net/weixin_42287030/article/details/111989284)]
+- **常见应用场景**
+
+当需要存储数百万个同类型整数或浮点数，且不需要 NumPy 提供的复杂数学运算时，使用 `array` 模块比 `list` 更节省资源。例如：处理原始二进制数据流、网络数据包序列等。 [[1](https://comate.baidu.com/zh/page/10c99h6h0ow)]
 
 
 
 # 49. enum
 
+## 1. 什么是[枚举](https://zhida.zhihu.com/search?content_id=197997002&content_type=Article&match_order=1&q=枚举&zd_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ6aGlkYV9zZXJ2ZXIiLCJleHAiOjE3NzgzNjAyMzksInEiOiLmnprkuL4iLCJ6aGlkYV9zb3VyY2UiOiJlbnRpdHkiLCJjb250ZW50X2lkIjoxOTc5OTcwMDIsImNvbnRlbnRfdHlwZSI6IkFydGljbGUiLCJtYXRjaF9vcmRlciI6MSwiemRfdG9rZW4iOm51bGx9.gWa5QdqsqdJ7PuBOM8W9Jw5FcmHSzg2LbjCRApgVJjA&zhida_source=entity)（enumeration）？
 
+枚举模块（enum）是Python 3.4添加的功能，什么是枚举（enumeration）呢？根据官方文档：
+
+> An enumeration is a set of symbolic names bound to [unique](https://zhida.zhihu.com/search?content_id=197997002&content_type=Article&match_order=1&q=unique&zd_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ6aGlkYV9zZXJ2ZXIiLCJleHAiOjE3NzgzNjAyMzksInEiOiJ1bmlxdWUiLCJ6aGlkYV9zb3VyY2UiOiJlbnRpdHkiLCJjb250ZW50X2lkIjoxOTc5OTcwMDIsImNvbnRlbnRfdHlwZSI6IkFydGljbGUiLCJtYXRjaF9vcmRlciI6MSwiemRfdG9rZW4iOm51bGx9.lfjlauYM5-VBFw9JFiu8-mQvf45tg_4FumVS_NM52H4&zhida_source=entity), constant values. Within an enumeration, the values can be compared by identity, and the enumeration itself can be iterated over.[[1\]](https://zhuanlan.zhihu.com/p/494394714#ref_1)
+
+即枚举代表了一系列互不相同的常量，这一系列常量可以通过identity互相比较，也可以进行迭代。比如，一个人有四种状态（工作、休息、吃饭、睡觉）
+
+```python3
+from enum import Enum
+
+class Status(Enum):
+    WORKING = 0
+    BREAK = 1
+    EATING = 2
+    SLEEPING = 3
+
+# 可以通过identity比较
+print(Status.WORKING.value < Status.BREAK.value)
+
+# 也可以迭代
+for s in Status:
+    print(s)
+```
+
+## 2. 为什么要有枚举？
+
+为什么要有枚举呢？PEP 435中这样介绍
+
+> The properties of an enumeration are useful for defining an immutable, related set of constant values that may or may not have a semantic meaning.[[2\]](https://zhuanlan.zhihu.com/p/494394714#ref_2)
+
+**在Python中，使用枚举的目的主要是方便常量的管理，方便记忆的同时使代码更加简洁易读**。
+
+举个例子，在代码中通常使用不同的整数代表一些常量。比如用0代表WORKING，1代表BREAK等。这样写可以减少传参过程中对内存的占用，但是带来的麻烦是：写代码/阅读代码的人极有可能不明白这个0背后的意义。用枚举就可以解决这个问题。
+
+举个例子，人在四种状态下分别需要做四件事情，WORKING的时候“努力工作赚钱养家！”，BREAK的时候“休息是为了重新出发！”，EATING的时候要“好好吃饭，健康成长！”，SLEEPING的时候“祝你做个好梦！”。这四种状态对应的字符串又臭又长，如果每次都在代码里面写一遍的话，代码就会非常丑，而且自己也不一定能记得那么清楚。用枚举就能很好地解决这个问题：
+
+```python3
+from enum import Enum
+
+class Status(Enum):
+    WORKING = "努力工作赚钱养家！"
+    BREAK = "休息是为了重新出发！"
+    EATING = "好好吃饭，健康成长！"
+    SLEEPING = "祝你做个好梦！"
+
+def what_shoud_i_do(s: Status) -> str:
+    print(s.value)
+
+what_shoud_i_do(Status.WORKING)
+```
+
+执行结果
+
+![img](https://pica.zhimg.com/v2-2ef394e5df1cdd167dfc93fe828a6978_1440w.jpg)
+
+执行结果
+
+而且注意：**枚举的value一旦确定，是不可更改的，这样就保证了常量的安全**。
+
+## 3. 如何创建枚举？
+
+创建枚举的方法很简单，从enum模块中导入Enum类，然后自定义一个类继承它就ok。更进一步，和其他类一样，你可以在这个类中定义各种属性和方法。每个枚举有name和value，如下所示
+
+```python3
+from enum import Enum
+
+# 继承Enum类
+class Status(Enum):
+    WORKING = "努力工作赚钱养家！"
+    BREAK = "休息是为了重新出发！"
+    EATING = "好好吃饭，健康成长！"
+    SLEEPING = "祝你做个好梦！"
+    
+    @classmethod
+    def status(cls, hour):
+        if hour < 7 or hour >= 23:
+            return cls.WORKING
+        elif 7 <= hour < 9 or 17 <= hour < 18: 
+            return cls.EATING
+        elif 9 <= hour < 12 or 14 <= hour < 17:
+            return cls.WORKING
+        else:
+            return cls.BREAK
+
+# 通过name访问
+s = Status["WORKING"]
+print(s.name, s.value)
+# 通过value访问
+s = Status("祝你做个好梦！")
+print(s.name, s.value)
+# 调用类方法
+print(Status.status(9))
+```
+
+## 4. enum模块详解
+
+enum模块一共就一个元类（EnumMeta），四个类（Enum, [IntEnum](https://zhida.zhihu.com/search?content_id=197997002&content_type=Article&match_order=1&q=IntEnum&zd_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ6aGlkYV9zZXJ2ZXIiLCJleHAiOjE3NzgzNjAyMzksInEiOiJJbnRFbnVtIiwiemhpZGFfc291cmNlIjoiZW50aXR5IiwiY29udGVudF9pZCI6MTk3OTk3MDAyLCJjb250ZW50X3R5cGUiOiJBcnRpY2xlIiwibWF0Y2hfb3JkZXIiOjEsInpkX3Rva2VuIjpudWxsfQ.bDuk5e_VUmf0tBd4epDk4E7ofqIzwxo3l3IZAGwkFE4&zhida_source=entity), Flag, IntFlag, auto），一个装饰器（unique），他们大致关系如下
+
+![img](https://pic1.zhimg.com/v2-cb21866c1eea32146e5e6e8106c9b0ee_1440w.jpg)
+
+enum模块
+
+关于元类，可以参见[【Python】什么是元类（metaclass）?](https://zhuanlan.zhihu.com/p/488797554)
+
+关于装饰器，可以参见[【Python】装饰器到底怎么用？](https://zhuanlan.zhihu.com/p/480161267)
+
+### 4.1 IntEnum
+
+IntEnum继承自int和Enum，它只允许枚举的value为整数型。
+
+### 4.2 Flag
+
+Flag和Enum的不同在于：
+
+- Flag的value只能是整数；
+- Flag支持位运算符[[3\]](https://zhuanlan.zhihu.com/p/494394714#ref_3)（&与、|或、^异或、~取反）
+
+```python3
+from enum import Flag
+
+class Status(Flag):
+    WORKING = 0
+    BREAK = 1
+    EATING = 2
+    SLEEPING = 4
+
+print(Status.WORKING & Status.BREAK)    # output: Status.WORKING
+print(Status.WORKING | Status.BREAK)    # output: Status.BREAK
+print(Status.WORKING ^ Status.BREAK)    # output: Status.BREAK
+print(~ Status.SLEEPING)                # output: Status.EATING|BREAK
+```
+
+### 4.3 IntFlag
+
+IntFlag继承自int和Flag，因此int和Flag的特性它都有，即
+
+- IntFlag的value只能是整数；
+- IntFlag支持位运算符[[3\]](https://zhuanlan.zhihu.com/p/494394714#ref_3)（&与、|或、^异或、~取反）
+- IntFlag还能当成整数用，比如和整数进行运算，索引等等
+
+```python3
+from enum import IntFlag
+
+class Status(IntFlag):
+    WORKING = 0
+    BREAK = 1
+    EATING = 2
+    SLEEPING = 3
+
+print(Status.BREAK + 100)               # output: 101
+print([*range(10)][Status.SLEEPING])    # output: 3
+```
+
+### 4.4 auto
+
+如果枚举的value不重要，可以使用auto类的实例化，它会自动赋予一个整数型的value。
+
+```python3
+from enum import IntFlag, auto 
+
+class Status(IntFlag):
+    WORKING = 100
+    BREAK = auto()
+    EATING = 101
+    SLEEPING = auto()
+
+for s in Status:
+    print(s.name, s.value)
+```
+
+运行结果如下，猜猜为什么只有三行？不是四个状态吗？
+
+![img](https://pic1.zhimg.com/v2-62a590fb34df304d9945e2c96fbe1d1a_1440w.jpg)
+
+auto会自动生成一个value
+
+### 4.5 unqiue
+
+枚举中不允许出现相同的name，即如下情况是不允许的
+
+```python3
+from enum import IntFlag
+
+class Status(IntFlag):
+    WORKING = 0
+    BREAK = 1
+    EATING = 2
+    SLEEPING = 3
+    SLEEPING = 4    # 不允许出现相同的name
+```
+
+但允许出现相同的value，即
+
+```python3
+from enum import IntFlag
+
+class Status(IntFlag):
+    WORKING = 0
+    BREAK = 1
+    EATING = 2
+    SLEEPING = 2
+```
+
+如果你想保证所有的name和value都不重复，可以使用unique装饰器。使用了unique装饰器以后，如果出现了重复的value，系统就会报错
+
+```text
+from enum import IntFlag, unique
+
+@unique
+class Status(IntFlag):
+    WORKING = 0
+    BREAK = 1
+    EATING = 2
+    SLEEPING = 3
+```
+
+
+
+## 参考
+
+1. [^](https://zhuanlan.zhihu.com/p/494394714#ref_1_0)enum — Support for enumerations https://docs.python.org/3/library/enum.html
+2. [^](https://zhuanlan.zhihu.com/p/494394714#ref_2_0)PEP 435 https://peps.python.org/pep-0435/#abstract
+3. ^[a](https://zhuanlan.zhihu.com/p/494394714#ref_3_0)[b](https://zhuanlan.zhihu.com/p/494394714#ref_3_1)位运算 https://www.runoob.com/w3cnote/bit-operation.html
 
 # 50. typing
 
+Python 的 `typing` 模块是现代 Python 开发（尤其是大型项目）中不可或缺的神器。它能极大地提高代码的可读性，并配合 IDE（如 VS Code、PyCharm）和静态类型检查工具（如 mypy）进行类型检查，减少运行时 Bug。
 
+以下内容整理了所有类型注解补全，并额外补充了其他高频常用类型，分为四大类进行详细说明，帮助你一次性全面掌握。
+
+## 导入部分（已补全常用类型）
+
+```python
+from typing import (
+    TYPE_CHECKING,
+    Literal,
+    Optional,
+    Callable,
+    Generator,
+    Dict,
+    List,          # 补充：列表
+    Tuple,         # 补充：元组
+    Set,           # 补充：集合
+    Any,
+    Awaitable,
+    Union,
+    Iterable,      # 补充：可迭代对象
+    Iterator,      # 补充：迭代器
+    Sequence,      # 补充：序列（更宽泛的列表/元组/字符串）
+    TypeVar,       # 补充：泛型变量
+    Protocol,      # 补充：协议（结构化类型/鸭子类型）
+    TypedDict,     # 补充：类型化字典（固定键）
+    Final,         # 补充：最终变量（不可重新赋值）
+    Annotated,     # 补充：带元数据的类型（Python 3.9+）
+    cast,          # 补充：类型转换工具（运行时不检查）
+    overload,      # 补充：函数重载
+)
+```
+
+> 注意：Python 3.9+ 后，内置容器（如 `list`, `dict`, `tuple`, `set`）可以直接小写使用，无需从 `typing` 导入。但为了兼容旧版本和统一风格，很多项目仍从 `typing` 导入。
+
+## 第一类：基础容器与数据结构 (Basic Containers)
+
+### 1. Dict[K, V]、List[T]、Tuple[... ]、Set[T]
+
+- **用法**：泛型容器，指定内部元素的类型。
+- **场景**：明确数据结构的内容，提高可读性和检查严谨性。
+
+```python
+from typing import Dict, List, Tuple, Set
+
+user_info: Dict[str, int] = {"age": 18, "id": 1001}
+scores: List[float] = [98.5, 88.0, 100.0]
+point: Tuple[int, int, int] = (10, 20, 30)          # 定长定类型
+flexible_tuple: Tuple[int, ...] = (1, 2, 3, 4)      # 变长同类型（Python 3.11+ 更优雅）
+unique_ids: Set[str] = {"id1", "id2"}
+```
+
+### 2. Any
+
+- **用法**：表示任意类型，类型检查器对此变量完全放行。
+- **注意**：慎用！相当于关闭类型检查，失去 typing 的意义。
+
+```python
+from typing import Any
+
+def print_anything(data: Any) -> None:
+    print(data)  # 可以传任何类型
+```
+
+### 3. Sequence[T]（补充）
+
+- **含义**：比 List 更宽泛，包括 list、tuple、str、bytes 等所有支持索引、len()、切片的序列。
+- **优势**：函数参数更通用，兼容性更好。
+
+```python
+from typing import Sequence
+
+def print_reverse(seq: Sequence[int]) -> None:
+    print(seq[::-1])  # 接受 list、tuple、range 等
+```
+
+## 第二类：逻辑控制与组合 (Logic & Composition)
+
+### 4. Union[A, B, ...]
+
+- **含义**：联合类型，“A 或 B 或 …”。
+- **新语法**（Python 3.10+）：直接用 `A | B`。
+
+```python
+from typing import Union
+
+def get_user(user_id: Union[int, str]) -> None: ...
+# 等价于 Python 3.10+
+# def get_user(user_id: int | str) -> None: ...
+```
+
+### 5. Optional[T]
+
+- **含义**：等价于 `T | None`，表示可以为 None。
+- **常见场景**：函数参数默认值为 None。
+
+```python
+from typing import Optional
+
+def greet(name: Optional[str] = None) -> None:
+    print(f"Hello, {name or 'Guest'}")
+```
+
+### 6. Literal['a', 'b', 42]
+
+- **含义**：字面量类型，变量值必须是指定的常量之一。
+- **场景**：模式选择、状态码、配置开关，非常适合代替枚举的轻量场景。
+
+```python
+from typing import Literal
+
+FileMode = Literal['r', 'w', 'a', 'rb']
+def open_file(mode: FileMode) -> None: ...
+```
+
+## 第三类：函数、生成器与异步 (Functions & Async)
+
+### 7. Callable[[Arg1, Arg2, ...], ReturnType]
+
+- **含义**：表示一个可调用对象（函数、lambda、类实例带 **call**）。
+- **用法**：常用于回调函数参数。
+
+```python
+from typing import Callable
+
+def calculate(a: int, b: int, op: Callable[[int, int], int]) -> int:
+    return op(a, b)
+
+calculate(3, 4, lambda x, y: x * y)
+```
+
+### 8. Generator[YieldType, SendType, ReturnType]
+
+- 含义
+
+  ：标注 yield 生成器的三种类型。
+
+  - YieldType：yield 出的值类型（最常用）。
+  - SendType：通过 `.send()` 传入的值类型（常用 None）。
+  - ReturnType：生成器结束时的返回值（通常 None）。
+
+```python
+from typing import Generator
+
+def count_down(n: int) -> Generator[int, None, None]:
+    while n > 0:
+        yield n
+        n -= 1
+```
+
+### 9. Iterable[T] 与 Iterator[T]（补充）
+
+- **Iterable**：可被 for 循环遍历的对象。
+- **Iterator**：支持 next() 的对象（通常是 Iterable 的迭代器）。
+- **建议**：参数只需遍历时用 Iterable 更宽松。
+
+```python
+from typing import Iterable
+
+def process_items(items: Iterable[str]) -> None:
+    for item in items:
+        print(item)
+```
+
+### 10. Awaitable[T]
+
+- **含义**：可以被 `await` 的对象（通常是协程）。
+- **场景**：高级异步框架中传递任务。
+
+```python
+from typing import Awaitable
+
+async def run_task(task: Awaitable[int]) -> None:
+    result = await task
+    print(result)
+```
+
+## 第四类：特殊工具与高级用法 (Special Tools)
+
+### 11. TYPE_CHECKING
+
+- **含义**：运行时为 False，类型检查时为 True。
+- **核心用途**：解决循环导入问题，只在静态检查时导入类。
+
+```python
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .models import User  # 只在 mypy 检查时导入
+
+def process_user(user: "User") -> None: ...  # 字符串引用避免运行时导入
+```
+
+### 12. TypeVar、Generic（补充泛型）
+
+- **用途**：实现类型一致的泛型函数/类。
+
+```python
+from typing import TypeVar, List
+
+T = TypeVar('T')
+
+def first_item(items: List[T]) -> T:
+    return items[0]
+
+# 调用时自动推断：first_item([1, 2]) -> int
+```
+
+### 13. Final[T]（补充）
+
+- **含义**：标记变量/属性不可重新赋值（类型检查器会报错）。
+
+```python
+from typing import Final
+
+API_KEY: Final[str] = "abc123"
+# API_KEY = "new"  # mypy 会报错
+```
+
+### 14. Annotated[T, ...]（补充，Python 3.9+）
+
+- **含义**：为类型附加元数据，常用于第三方库（如 pydantic、fastapi）的验证。
+
+```python
+from typing import Annotated
+
+PositiveInt = Annotated[int, lambda x: x > 0]
+
+def set_age(age: PositiveInt) -> None: ...
+```
+
+### 15. TypedDict（补充）
+
+- **含义**：为字典指定固定键和对应类型（结构化 dict）。
+
+```python
+from typing import TypedDict
+
+class Movie(TypedDict):
+    title: str
+    year: int
+
+movie: Movie = {"title": "Inception", "year": 2010}
+```
+
+## 总结速查表 (Cheatsheet)
+
+| 类型注解                 | 简单解释                      | 典型场景               |
+| ------------------------ | ----------------------------- | ---------------------- |
+| `Dict[K, V]`             | 字典，指定键值类型            | 配置、JSON 数据        |
+| `List[T]`                | 列表                          | 集合数据               |
+| `Tuple[A, B, ...]`       | 定长元组                      | 坐标、固定字段         |
+| `Set[T]`                 | 集合                          | 去重 ID                |
+| `Sequence[T]`            | 通用序列（list/tuple/str 等） | 参数只需索引访问       |
+| `Any`                    | 任意类型（慎用）              | 动态数据、第三方库回调 |
+| `Union[A, B]` 或 `A | B` | 多选一                        | ID 可为 int 或 str     |
+| `Optional[T]`            | T 或 None                     | 可选参数、可能缺失字段 |
+| `Literal['a', 42]`       | 固定字面值                    | 模式、状态码           |
+| `Callable[[...], R]`     | 函数/回调                     | 高阶函数、策略模式     |
+| `Generator[Y, S, R]`     | 生成器                        | yield 迭代器           |
+| `Iterable[T]`            | 可遍历对象                    | for 循环参数           |
+| `Awaitable[T]`           | 可 await 的协程               | 异步任务调度           |
+| `TYPE_CHECKING`          | 类型检查开关                  | 解决循环导入           |
+| `TypeVar('T')`           | 泛型占位符                    | 通用函数/类            |
+| `Final[T]`               | 不可变常量                    | 配置常量、魔法值       |
+| `Annotated[T, ...]`      | 带元数据类型                  | 验证、依赖注入         |
+| `TypedDict`              | 固定键类型的字典              | API 返回结构、配置     |
 
 # 51. zoneinfo
+
+### 参考文档1： https://juejin.cn/post/7027812828144730143
+
+### 参考文档2：https://zhuanlan.zhihu.com/p/680351769
 
 
 
 # 52. unicodedata
 
-
+### 参考文档： https://zhuanlan.zhihu.com/p/336742223
 
 # 53. gzip
+
+## GZIP概念
+
+Gzip是若干种文件压缩程序的简称，通常指GNU计划的实现，此处的gzip代表GNU zip。也经常用来表示gzip这种文件格式。
+
+GZIP最早由Jean-loup Gailly和Mark Adler创建，用于UNⅨ系统的文件压缩。我们在Linux中经常会用到后缀为.gz的文件，它们就是GZIP格式的。现今已经成为Internet 上使用非常普遍的一种数据压缩格式，或者说一种文件格式。
+
+HTTP协议的GZIP编码是一种用来改进WEB应用程序性能的技术。大流量的WEB站点常常使用GZIP压缩技术来让用户感受更快的速度。这一般是指WWW服务器中安装的一个功能，当有人来访问这个服务器中的网站时，服务器中的这个功能就将网页内容压缩后传输到来访的电脑浏览器中显示出来.一般对纯文本内容可压缩到原大小的40%.这样传输就快了，效果就是你点击网址后会很快的显示出来.当然这也会增加服务器的负载. 一般服务器中都安装有这个功能模块的。
+
+## 文件格式
+
+gzip的基础是DEFLATE，DEFLATE是LZ77与哈夫曼编码的一个组合体。尽管这种文件格式允许多个这样的数据拼接在一起，在解压时也能认出它们是拼接在一起的数据，但通常gzip仅用来压缩单个文件。多个文件的压缩归档通常是首先将这些文件合并成一个tar文件，然后再使用gzip进行压缩，最后生成的.tar.gz或者.tgz文件就是所谓的“tar压缩包”或者“tarball”。
+
+注意不要将gzip和ZIP压缩格式混淆。ZIP也使用DEFLATE算法，而且可移植性更好，不需要一个外部的归档工具就可以包容多个文件。但是，由于ZIP对每个文件进行单独压缩而没有利用文件间的冗余信息（即固实压缩），所以ZIP的压缩率会稍逊于tar压缩包。
+
+# Python Gzip库
+
+gzip库是python的标准库，此模块提供的简单接口帮助用户压缩和解压缩文件，功能类似于 GNU 应用程序 gzip 和 gunzip。数据压缩由 zlib模块提供。
+
+gzip模块提供 GzipFile 类和 open()、compress()、decompress() 几个便利的函数。GzipFile 类可以读写 gzip 格式的文件，还能自动压缩和解压缩数据，这让操作压缩文件如同操作普通的 file object 一样方便。
+
+注意，此模块不支持部分可以被 gzip 和 gunzip 解压的格式，如利用 compress 或 pack 压缩所得的文件。
+
+## gzip open
+
+```ini
+ini 体验AI代码助手 代码解读复制代码gzip.open(
+        filename, 
+        mode='rb', 
+        compresslevel=9, 
+        encoding=None, 
+        errors=None, 
+        newline=None)
+```
+
+以二进制方式或者文本方式打开一个 gzip 格式的压缩文件，返回一个 file object。
+
+参数说明：
+
+filename：参数可以是一个实际的文件名(一个str 对象或者bytes对象), 或者是一个用来读写的已存在的文件对象。
+
+mode：参数可以是二进制模式'r', 'rb', 'a', 'ab', 'w', 'wb', 'x' or 'xb' , 或者是文本模式 'rt', 'at', 'wt', or 'xt'。默认值是 'rb'。它的默认值是'r'，表示以文本模式打开阅读。其他常见的值有：'w'用于写入（如果文件已经存在，则截断它），'x'用于独占创建，'a'用于追加（在一些Unix系统上，这意味着所有的写入都追加到文件的末尾，不管当前的寻址位置如何）。在文本模式下，如果没有指定编码，使用的编码是与平台有关的：调用locale.getpreferredencoding(False)来获得当前的locale编码。(对于读写原始字节，使用二进制模式，不指定编码。) 可用的模式。
+
+![图片.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a6fbc3b5f68b4f4ead9d32140eb86844~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp?)
+
+compresslevel参数是从0到9的整数，压缩等级; 压缩格式分类。
+
+```ini
+ini 体验AI代码助手 代码解读复制代码import gzip
+ 
+# 创建一个gzip文件
+content = "Hello world！"
+f = gzip.open('file.txt.gz', 'wb')
+f.write(content.encode())
+f.close()
+```
+
+![图片.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a82b5ff56adc4018a791e521bc328d5f~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp?)
+
+其中'wb'就是写入，若没有该路径文件将会自动生成一个文件。
+
+## gzip.GzipFile压缩和解压
+
+```ini
+ini 体验AI代码助手 代码解读复制代码class gzip.GzipFile(
+        filename=None, 
+        mode=None, 
+        compresslevel=9, 
+        fileobj=None, 
+        mtime=None)
+```
+
+GzipFile 类的构造器支持 truncate() 的异常，与 file object 的大多数方法非常相似。fileobj和 filename至少有一个不为空。
+
+新的实例基于 fileobj，它可以是一个普通文件，一个 io.BytesIO 对象，或者任何一个与文件相似的对象。当 filename 是一个文件对象时，它的默认值是 None。
+
+当 fileobj 为 None 时， filename 参数只用于 gzip 文件头中，这个文件有可能包含未压缩文件的源文件名。如果文件可以被识别，默认 fileobj 的文件名；否则默认为空字符串，在这种情况下文件头将不包含源文件名。
+
+需要注意的是，文件默认使用二进制模式打开。如果要以文本模式打开文件一个压缩文件，应该使用 open() 方法(或者使用 io.TextIOWrapper 包装 GzipFile )。
+
+调用 GzipFile 的 close() 方法不会关闭 fileobj，可以将一个 io.BytesIO 对象作为 fileobj，也可以使用 io.BytesIO 的 getvalue() 方法从内存缓存中恢复数据。
+
+GzipFile 支持 io.BufferedIOBase 类的接口, 包括迭代和 with 语句。只有 truncate() 方法没有实现。
+
+```ini
+ini 体验AI代码助手 代码解读复制代码import  gzip
+# 创建GzipFile实例
+zf = gzip.GzipFile('file_1.txt.gz', mode = 'wb') 
+contents = "Hello world！Friend!"
+zf.write(contents.encode())  # 写文件
+zf.close()  # 关闭
+```
+
+![图片.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c26f97a6f1844fdc9216b78336f6c736~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp?)
+
+## gzip.comress()压缩数据
+
+另外一种方法是用gzip.comress()方法将从文件中读出的数据进行压缩，再将压缩后的数据写入到文件中。
+
+```ini
+ini 体验AI代码助手 代码解读复制代码import  gzip
+ 
+contents = "Hello world！Friend!"
+pf = gzip.open('file_2.txt.gz', 'wb')
+data_comp = gzip.compress(contents.encode()) # 压缩数据
+pf.write(data_comp)  # 写文件
+pf.close()  # 关闭
+```
+
+![图片.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f9f4f87218474ae0807a2ce7db6b956b~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp?)
+
+从压缩文件看该方法和前2种效果是一样的。 下面这种方法更简便、更安全：
+
+```python
+python 体验AI代码助手 代码解读复制代码import  gzip
+with open('file_3.txt.gz', 'wb') as pw, open('file_3.txt','rb') as pr:
+    pw.write(gzip.compress(pr.read())  )  
+```
+
+![图片.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/083d5c2eee8d43f99a0d1e4053807ca0~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp?)
+
+## 解压数据
+
+### 第一种
+
+```python
+python 体验AI代码助手 代码解读复制代码import  gzip
+zip_filename = 'file.txt.gz'
+with open('./file_1.txt','wb') as pw:
+    zf = gzip.open(zip_filename, mode = 'rb') 
+    pw.write(zf.read())  # 写文件
+    zf.close()
+```
+
+![图片.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/bac6c03f3971475fa9963b467c91803b~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp?)
+
+### 第二种
+
+```csharp
+csharp 体验AI代码助手 代码解读复制代码zip_filename = 'file_2.txt.gz'
+with open('./file_2.txt','wb') as pw:
+    zf = gzip.GzipFile(zip_filename, mode = 'rb') 
+    pw.write(zf.read())  # 写文件
+    zf.close()
+```
+
+![图片.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c488eea557384266bea9d8b01cfd94e0~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp?)
+
+### 第三种
+
+```python
+python 体验AI代码助手 代码解读复制代码zip_filename = 'file_3.txt.gz'
+with open(zip_filename, 'rb') as pr, open('./file_3.txt','wb') as pw:
+    pw.write(gzip.decompress(pr.read())  )  
+```
+
+## 集体解压
+
+```python
+# 利用gzip批量解压缩文件
+import os
+import gzip
+ 
+ 
+def unzip_gz_file(path, new_path):
+    # 需要创建一个保存解压后的文件的文件夹，否则报错
+    base = os.path.abspath(path)
+    dst_path = os.path.join(base,new_path)
+    if not os.path.exists(dst_path):
+        os.mkdir(dst_path)
+    count = 0
+    try:
+        for f_path in os.listdir(path):
+            if '.gz' in f_path:
+                try:
+                    with gzip.GzipFile(fileobj=open(path + "/" + f_path, 'rb'), mode='rb') as g:
+                        with open(dst_path + "/" + f_path.replace(".gz", ""), "wb") as f:
+                            f.write(g.read())
+                        print(count, f"文件{f_path}  解压完成...")
+                except Exception as e:
+                    print(f_path, e)
+                count += 1
+    except Exception as e:
+        print(e)
+    else:
+        print("文件全部解压完成！")
+ 
+ 
+path = './'
+new_path = './unzip_file'
+unzip_gz_file(path, new_path)
+
+
+
+```
+
+![image-20260507165317729](./built-in-modules2.assets/image-20260507165317729.png)
 
 
 

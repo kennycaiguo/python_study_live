@@ -1,0 +1,3 @@
+test.txt -> test.txt -> hello,everyone | 第1行 | 共读取1行 | 第1行 | 共读取1行
+test.txt -> test.txt -> welcome to my python lessons | 第2行 | 共读取2行 | 第2行 | 共读取2行
+test.txt -> test.txt -> let's study python together | 第3行 | 共读取3行 | 第3行 | 共读取3行
