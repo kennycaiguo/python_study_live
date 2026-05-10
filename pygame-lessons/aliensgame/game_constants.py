@@ -6,6 +6,6 @@ class GameConstants:
     ALIEN_ODDS = 22 # chances for an alien to appear
     BOMB_ODDS = 60 # chances a new bomb will drop
     ALIEN_RELOAD = 12 # frames between new aliens
-    SCREENRECT = pg.Rect(50,50,700,500) 
+    SCREENRECT = pg.Rect(0, 0, 640, 480) 
     SCORE = 0  # INIT SCORE
     

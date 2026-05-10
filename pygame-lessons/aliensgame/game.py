@@ -132,7 +132,7 @@ def main(winstyle=0):
             firing = keystate[pg.K_SPACE]
             if not player.reloading and firing and len(shots) < gc.MAX_SHOTS:
                 Shot(
-                    player.gunpos,all,shots
+                    player.gunpos(),all,shots
                 )
                 if pg.mixer and shot_sound is not None:
                     shot_sound.play()  
@@ -147,7 +147,38 @@ def main(winstyle=0):
             if lastalien and not int(random.random()*gc.BOMB_ODDS):
                 Bomb(lastalien.sprite, all, bombs, all)
                 
-            # Detect collisions between aliens and players.                       
+            # Detect collisions between aliens and players.
+        for alien in pg.sprite.spritecollide(player, aliens, 1):
+            if pg.mixer and boom_sound is not None:
+                boom_sound.play()
+            Explosion(alien, all)
+            Explosion(player, all)
+            gc.SCORE = gc.SCORE + 1
+            player.kill()
+
+        # See if shots hit the aliens.
+        for alien in pg.sprite.groupcollide(aliens, shots, 1, 1).keys():
+            if pg.mixer and boom_sound is not None:
+                boom_sound.play()
+            Explosion(alien, all)
+            gc.SCORE = gc.SCORE + 1
+
+        # See if alien bombs hit the player.
+        for bomb in pg.sprite.spritecollide(player, bombs, 1):
+            if pg.mixer and boom_sound is not None:
+                boom_sound.play()
+            Explosion(player, all)
+            Explosion(bomb, all)
+            player.kill()
+
+        # draw the scene
+        dirty = all.draw(screen)
+        pg.display.update(dirty)
+
+        # cap the framerate at 40fps. Also called 40HZ or 40 times per second.
+        clock.tick(40)
+       
+                            
 if __name__ == "__main__":
     main()      
     pg.quit()      

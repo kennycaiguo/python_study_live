@@ -78,7 +78,7 @@ class Explosion(pg.sprite.Sprite):
             self.kill()
 
 class Shot(pg.sprite.Sprite):
-    speed = -1
+    speed = -11
     images: List[pg.Surface] = []
 
     def __init__(self,pos, *groups):
